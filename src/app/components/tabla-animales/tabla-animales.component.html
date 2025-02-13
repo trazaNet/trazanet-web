@@ -1,0 +1,37 @@
+<div class="container">
+  <!-- Área de drop que solo se muestra cuando se arrastra un archivo -->
+  <div class="drop-overlay" *ngIf="isDragging">
+    <div class="drop-zone">
+      <div class="drop-message">
+        <i class="fas fa-file-excel"></i>
+        <h2>Suelta el archivo Excel aquí</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menú contextual -->
+  <div 
+    *ngIf="showContextMenu" 
+    class="context-menu"
+    [style.left.px]="contextMenuPosition.x"
+    [style.top.px]="contextMenuPosition.y"
+    (click)="onContextMenuClick($event)"
+  >
+    // ... existing code ...
+  </div>
+
+  <!-- Input para nueva lista -->
+  <div *ngIf="showNewListInput" class="new-list-input" [style.left.px]="contextMenuPosition.x" [style.top.px]="contextMenuPosition.y">
+    // ... existing code ...
+  </div>
+
+  <!-- Modal de detalles de lista -->
+  <div class="modal-overlay" *ngIf="showListDetails" (click)="closeListDetails()">
+    // ... existing code ...
+  </div>
+
+  <!-- Contenido principal que siempre se muestra -->
+  <div class="content">
+    // ... existing code ...
+  </div>
+</div> 

@@ -1,0 +1,164 @@
+<!-- Botón de menú (oculto en la página de login) -->
+<button class="menu-toggle" (click)="toggleSidebar()" [class.active]="showSidebar" *ngIf="!isLoginPage">
+  <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar -->
+<div class="sidebar" [class.active]="showSidebar" *ngIf="!isLoginPage">
+  <div class="sidebar-header">
+    <h2>trazaNet.</h2>
+    <button class="close-sidebar" (click)="toggleSidebar()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  
+  <div class="sidebar-content">
+    <!-- Menú principal -->
+    <div class="menu-section">
+      <div class="menu-item" (click)="navigateTo('inicio')">
+        <i class="fas fa-home"></i>
+        <span>Inicio</span>
+      </div>
+      <div class="menu-item" (click)="navigateTo('datos')">
+        <i class="fas fa-table"></i>
+        <span>Datos</span>
+      </div>
+      <div class="menu-item" (click)="toggleListasSection()">
+        <i class="fas fa-list"></i>
+        <span>Listas Personalizadas</span>
+        <i class="fas" [class.fa-chevron-down]="!showingLists" [class.fa-chevron-up]="showingLists"></i>
+      </div>
+      <div class="menu-item" (click)="navigateTo('guias')">
+        <i class="fas fa-file-alt"></i>
+        <span>Registro de Guías</span>
+      </div>
+    </div>
+
+    <!-- Sección de listas personalizadas -->
+    <div class="lists-section" *ngIf="showingLists">
+      <div class="section-header">
+        <button class="back-button" (click)="toggleListasSection()">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <h3>Listas Personalizadas</h3>
+        <button class="view-all-btn" (click)="navigateTo('listas')" title="Ver todas las listas">
+          <i class="fas fa-external-link-alt"></i>
+        </button>
+      </div>
+
+      <!-- Input para nueva lista -->
+      <div class="new-list-input" *ngIf="showNewListInput">
+        <input 
+          type="text" 
+          [(ngModel)]="newListName" 
+          placeholder="Nombre de la lista"
+          (keyup.enter)="crearLista()"
+          #newListInput>
+        <div class="input-buttons">
+          <button (click)="crearLista()" class="save-btn">
+            <i class="fas fa-check"></i>
+          </button>
+          <button (click)="showNewListInput = false" class="cancel-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Botón para agregar nueva lista -->
+      <button class="add-list-btn" (click)="showNewListInput = true" *ngIf="!showNewListInput">
+        <i class="fas fa-plus"></i>
+        Nueva Lista
+      </button>
+
+      <!-- Lista de listas personalizadas -->
+      <div class="lists-container">
+        <div *ngFor="let lista of listas" class="lista-item">
+          <div class="lista-info">
+            <div class="lista-nombre">{{ lista.nombre }}</div>
+            <div class="lista-count">{{ getListaCount(lista) }} propietarios</div>
+          </div>
+          <div class="lista-actions">
+            <button class="view-btn" (click)="mostrarDetallesLista(lista)" title="Ver detalles">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button class="delete-btn" (click)="eliminarLista(lista, $event)" title="Eliminar lista">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+        <div *ngIf="listas.length === 0" class="empty-lists">
+          No hay listas personalizadas
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección de usuario -->
+    <div class="user-section">
+      <div class="menu-item logout" (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Cerrar Sesión</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contenedor principal -->
+<div class="app-container" [class.sidebar-visible]="showSidebar && !isLoginPage">
+  <div class="main-content">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+
+<!-- Modal de detalles de lista -->
+<div class="modal-overlay" *ngIf="listaSeleccionada" (click)="cerrarDetallesLista()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ listaSeleccionada.nombre }}</h2>
+      <div class="modal-actions">
+        <button class="export-btn" (click)="exportarListaExcel(listaSeleccionada)">
+          <i class="fas fa-file-excel"></i>
+          Exportar Excel
+        </button>
+        <button class="close-btn" (click)="cerrarDetallesLista()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="list-info">
+        <p class="list-date">Creada: {{ listaSeleccionada.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</p>
+        <p class="list-date">Última modificación: {{ listaSeleccionada.ultimaModificacion | date:'dd/MM/yyyy HH:mm' }}</p>
+      </div>
+      <div class="list-content">
+        <div *ngFor="let propietario of getPropietariosLista(listaSeleccionada)" class="propietario-item">
+          <div class="propietario-header">
+            <h3>{{ propietario.nombre }}</h3>
+            <span class="propietario-numero">({{ propietario.numero }})</span>
+          </div>
+          <div class="animales-list">
+            <div *ngFor="let dispositivo of propietario.animales" class="animal-item">
+              {{ dispositivo }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Diálogo de confirmación -->
+<div class="confirm-dialog" *ngIf="showConfirmDialog">
+  <div class="confirm-content">
+    <p>{{ confirmDialogMessage }}</p>
+    <div class="confirm-actions">
+      <button class="confirm-btn" (click)="confirmAction()">
+        <i class="fas fa-check"></i>
+        Confirmar
+      </button>
+      <button class="cancel-btn" (click)="cancelConfirmation()">
+        <i class="fas fa-times"></i>
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,215 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* Variables globales */
+:root {
+  --primary-green: #2E7D32;     /* Verde principal, más oscuro para acciones principales */
+  --secondary-green: #43A047;   /* Verde secundario para hover y elementos destacados */
+  --light-green: #C8E6C9;       /* Verde claro para fondos sutiles */
+  --success-green: #4CAF50;     /* Verde éxito para confirmaciones */
+  
+  --background-light: #ffffff;   /* Fondo principal */
+  --background-grey: #f7f7f8;   /* Fondo secundario, como ChatGPT */
+  --text-primary: #202123;      /* Texto principal */
+  --text-secondary: #6e6e80;    /* Texto secundario */
+  --border-color: #e5e5e5;      /* Color de bordes */
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Reset y estilos base */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  font-size: 16px;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: var(--text-primary);
+  background-color: var(--background-grey);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+app-root {
+  display: block;
+  min-height: 100vh;
+}
+
+/* Estilos de botones */
+button {
+  background-color: var(--primary-green);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--secondary-green);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &.secondary {
+    background-color: transparent;
+    color: var(--primary-green);
+    border: 1px solid var(--primary-green);
+
+    &:hover {
+      background-color: var(--light-green);
+    }
+  }
+}
+
+/* Estilos de inputs */
+input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 2px var(--light-green);
+  }
+}
+
+/* Estilos de tarjetas */
+.card {
+  background: var(--background-light);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* Estilos de tablas */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1rem 0;
+
+  th, td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  th {
+    background-color: var(--background-grey);
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  tr:hover {
+    background-color: var(--background-grey);
+  }
+}
+
+/* Utilidades */
+.text-success { color: var(--success-green); }
+.text-secondary { color: var(--text-secondary); }
+.bg-light { background-color: var(--background-light); }
+.bg-grey { background-color: var(--background-grey); }
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Estilos para el contenedor principal */
+.main-container {
+  padding: 20px;
+  margin: 0 auto;
+  max-width: 1200px;
+  min-height: calc(100vh - 40px);
+  background-color: var(--background-light);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Estilos para headings */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.1rem; }
+h6 { font-size: 1rem; }
+
+/* Estilos para links */
+a {
+  color: var(--primary-green);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--secondary-green);
+    text-decoration: underline;
+  }
+}
+
+/* Estilos para formularios */
+.form-group {
+  margin-bottom: 1rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+}
+
+/* Estilos para mensajes de error/éxito */
+.alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+
+  &.alert-error {
+    background-color: #fff5f5;
+    color: #dc3545;
+    border: 1px solid #ffcdd2;
+  }
+
+  &.alert-success {
+    background-color: #f0fff4;
+    color: var(--success-green);
+    border: 1px solid var(--light-green);
+  }
+}
