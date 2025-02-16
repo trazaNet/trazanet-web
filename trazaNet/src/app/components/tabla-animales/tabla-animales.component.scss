@@ -53,8 +53,14 @@
   margin-bottom: 20px;
   max-width: 100%;
   
+  .search-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  
   .search-input {
-    width: 100%;
+    flex: 1;
     padding: 12px 20px;
     margin: 8px 0;
     box-sizing: border-box;
@@ -73,6 +79,37 @@
 
     &::placeholder {
       color: var(--text-secondary);
+    }
+  }
+}
+
+.file-input-container {
+  position: relative;
+  
+  .hidden-file-input {
+    display: none;
+  }
+  
+  .upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 12px 20px;
+    background-color: var(--primary-green);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: var(--secondary-green);
+      transform: translateY(-1px);
+    }
+    
+    i {
+      font-size: 16px;
     }
   }
 }

@@ -1,11 +1,26 @@
 <div class="container">
   <div class="search-container">
-    <input 
-      type="text" 
-      [(ngModel)]="terminoBusqueda" 
-      (input)="buscar()"
-      placeholder="Buscar en todos los campos..."
-      class="search-input">
+    <div class="search-actions">
+      <input 
+        type="text" 
+        [(ngModel)]="terminoBusqueda" 
+        (input)="buscar()"
+        placeholder="Buscar en todos los campos..."
+        class="search-input">
+      
+      <div class="file-input-container">
+        <input 
+          type="file" 
+          #fileInput
+          (change)="onFileSelected($event)"
+          accept=".xls,.xlsx"
+          class="hidden-file-input">
+        <button class="upload-btn" (click)="fileInput.click()">
+          <i class="fas fa-file-upload"></i>
+          Cargar Excel
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="table-container">
