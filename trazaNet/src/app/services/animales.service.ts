@@ -27,4 +27,19 @@ export class AnimalesService {
       );
     });
   }
+
+  buscarPorDispositivo(dispositivo: string): Animal | undefined {
+    const animales = this.animalesSubject.value;
+    console.log('Buscando dispositivo:', dispositivo, 'en', animales.length, 'animales');
+    
+    const animalEncontrado = animales.find(animal => {
+      // Limpiar el número de dispositivo del animal de cualquier formato especial
+      const numeroAnimal = animal.dispositivo.replace(/[^0-9]/g, '');
+      // Comparar los últimos 8 dígitos
+      return numeroAnimal.endsWith(dispositivo);
+    });
+
+    console.log('Resultado de búsqueda:', animalEncontrado);
+    return animalEncontrado;
+  }
 } 

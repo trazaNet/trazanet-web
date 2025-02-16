@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { RouterOutlet, Router, RouterModule, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from './services/auth.service';
 import { ListasPersonalizadasService } from './services/listas-personalizadas.service';
 import { ListaPersonalizada } from './interfaces/lista-personalizada.interface';
+import { ChatService, ChatMessage } from './services/chat.service';
 import * as XLSX from 'xlsx';
 
 @Component({
@@ -20,11 +21,12 @@ import * as XLSX from 'xlsx';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnInit, AfterViewChecked {
   title = 'trazaNet';
   showSidebar = false;
-  isLoginPage = true;
+  isAuthPage = true;
   showingLists = false;
+  showingGuias = false;
   showNewListInput = false;
   newListName = '';
   listas: ListaPersonalizada[] = [];
@@ -34,20 +36,28 @@ export class AppComponent {
   confirmDialogAction: () => void = () => {};
   confirmDialogPosition = { x: 0, y: 0 };
 
+  @ViewChild('chatMessages') private chatMessages!: ElementRef;
+  
+  showChat = false;
+  messages: ChatMessage[] = [];
+  currentMessage = '';
+  isProcessing = false;
+
   constructor(
     private router: Router,
     private authService: AuthService,
-    private listasService: ListasPersonalizadasService
+    private listasService: ListasPersonalizadasService,
+    private chatService: ChatService
   ) {
     // Suscribirse a los cambios de ruta
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
-      // Actualizar isLoginPage basado en la ruta actual
-      this.isLoginPage = event.url === '/login' || event.url === '/';
+      // Actualizar isAuthPage basado en la ruta actual
+      this.isAuthPage = event.url === '/login' || event.url === '/' || event.url === '/register';
       
-      // Si no está autenticado y no está en la página de login, redirigir a login
-      if (!this.authService.isLoggedIn() && !this.isLoginPage) {
+      // Si no está autenticado y no está en una página de autenticación, redirigir a login
+      if (!this.authService.isLoggedIn() && !this.isAuthPage) {
         this.router.navigate(['/login']);
       }
     });
@@ -58,6 +68,20 @@ export class AppComponent {
     });
   }
 
+  ngOnInit() {}
+
+  ngAfterViewChecked() {
+    this.scrollToBottom();
+  }
+
+  private scrollToBottom(): void {
+    try {
+      if (this.chatMessages) {
+        this.chatMessages.nativeElement.scrollTop = this.chatMessages.nativeElement.scrollHeight;
+      }
+    } catch (err) {}
+  }
+
   toggleSidebar() {
     this.showSidebar = !this.showSidebar;
   }
@@ -66,6 +90,13 @@ export class AppComponent {
     this.showingLists = !this.showingLists;
     if (!this.showingLists) {
       this.showNewListInput = false;
+    }
+  }
+
+  toggleGuiasSection() {
+    this.showingGuias = !this.showingGuias;
+    if (this.showingGuias) {
+      this.showingLists = false;
     }
   }
 
@@ -155,5 +186,57 @@ export class AppComponent {
     // Generar el archivo y descargarlo
     const nombreArchivo = `${lista.nombre}_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, nombreArchivo);
+  }
+
+  toggleChat() {
+    this.showChat = !this.showChat;
+    if (this.showChat && this.messages.length === 0) {
+      // Mensaje de bienvenida
+      this.messages.push({
+        role: 'assistant',
+        content: '¡Hola! Soy el asistente de TrazaNet. ¿En qué puedo ayudarte?',
+        timestamp: new Date()
+      });
+    }
+  }
+
+  async sendMessage() {
+    if (!this.currentMessage.trim() || this.isProcessing) return;
+
+    // Agregar mensaje del usuario
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: this.currentMessage,
+      timestamp: new Date()
+    };
+    this.messages.push(userMessage);
+
+    const messageToSend = this.currentMessage;
+    this.currentMessage = '';
+    this.isProcessing = true;
+
+    try {
+      // Preparar el historial de mensajes para enviar al backend
+      const messageHistory = this.messages.map(({ role, content }) => ({ role, content }));
+      
+      // Enviar mensaje al backend
+      const response = await this.chatService.sendMessage(messageHistory).toPromise();
+      
+      if (response) {
+        this.messages.push({
+          ...response,
+          timestamp: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Error al procesar el mensaje:', error);
+      this.messages.push({
+        role: 'assistant',
+        content: 'Lo siento, ha ocurrido un error al procesar tu mensaje.',
+        timestamp: new Date()
+      });
+    } finally {
+      this.isProcessing = false;
+    }
   }
 }

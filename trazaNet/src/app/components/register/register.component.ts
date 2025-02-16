@@ -7,17 +7,19 @@ import { ThemeSwitchComponent } from '../theme-switch/theme-switch.component';
 import { AuthAnimationService } from '../../services/auth-animation.service';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-register',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, ThemeSwitchComponent],
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  templateUrl: './register.component.html',
+  styleUrls: ['./register.component.css']
 })
-export class LoginComponent {
+export class RegisterComponent {
+  fullName: string = '';
+  email: string = '';
   username: string = '';
   password: string = '';
-  errorMessage: string = '';
   showPassword: boolean = false;
+  errorMessage: string = '';
 
   constructor(
     private authService: AuthService,
@@ -30,16 +32,14 @@ export class LoginComponent {
   }
 
   onSubmit() {
-    if (this.authService.login(this.username, this.password)) {
-      this.router.navigate(['/inicio']);
-    } else {
-      this.errorMessage = 'Usuario o contraseña incorrectos';
-    }
+    // Aquí iría la lógica de registro
+    console.log('Registro:', { fullName: this.fullName, email: this.email, username: this.username });
   }
 
-  loginWithGoogle() {
-    console.log('Iniciando sesión con Google...');
-    this.errorMessage = 'La autenticación con Google estará disponible próximamente';
+  registerWithGoogle() {
+    // Aquí iría la lógica de registro con Google
+    console.log('Registro con Google');
+    this.errorMessage = 'El registro con Google estará disponible próximamente';
   }
 
   togglePanel(showRegister: boolean) {

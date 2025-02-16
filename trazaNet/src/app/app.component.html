@@ -1,10 +1,10 @@
-<!-- Botón de menú (oculto en la página de login) -->
-<button class="menu-toggle" (click)="toggleSidebar()" [class.active]="showSidebar" *ngIf="!isLoginPage">
+<!-- Botón de menú (oculto en páginas de autenticación) -->
+<button class="menu-toggle" (click)="toggleSidebar()" [class.active]="showSidebar" *ngIf="!isAuthPage">
   <i class="fas fa-bars"></i>
 </button>
 
 <!-- Sidebar -->
-<div class="sidebar" [class.active]="showSidebar" *ngIf="!isLoginPage">
+<div class="sidebar" [class.active]="showSidebar" *ngIf="!isAuthPage">
   <div class="sidebar-header">
     <h2>trazaNet.</h2>
     <button class="close-sidebar" (click)="toggleSidebar()">
@@ -28,9 +28,18 @@
         <span>Listas Personalizadas</span>
         <i class="fas" [class.fa-chevron-down]="!showingLists" [class.fa-chevron-up]="showingLists"></i>
       </div>
-      <div class="menu-item" (click)="navigateTo('guias')">
+      <div class="menu-item" (click)="toggleGuiasSection()">
         <i class="fas fa-file-alt"></i>
-        <span>Registro de Guías</span>
+        <span>Guías</span>
+        <i class="fas" [class.fa-chevron-down]="!showingGuias" [class.fa-chevron-up]="showingGuias"></i>
+      </div>
+      <!-- Submenú de guías -->
+      <div class="submenu-guias" *ngIf="showingGuias">
+        <div class="submenu-item" (click)="navigateTo('guias/cargar')">
+          <i class="fas fa-upload"></i>
+          <span>Cargar Guías</span>
+          <div class="submenu-description">Importar nuevas guías al sistema</div>
+        </div>
       </div>
     </div>
 
@@ -103,7 +112,7 @@
 </div>
 
 <!-- Contenedor principal -->
-<div class="app-container" [class.sidebar-visible]="showSidebar && !isLoginPage">
+<div class="app-container" [class.sidebar-visible]="showSidebar && !isAuthPage">
   <div class="main-content">
     <router-outlet></router-outlet>
   </div>
@@ -160,5 +169,42 @@
         Cancelar
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Botón flotante del chat -->
+<button class="chat-button" (click)="toggleChat()" [class.active]="showChat" *ngIf="!isAuthPage">
+  <i class="fas" [class.fa-times]="showChat" [class.fa-message]="!showChat"></i>
+</button>
+
+<!-- Contenedor del chat -->
+<div class="chat-container" [class.active]="showChat" *ngIf="!isAuthPage">
+  <div class="chat-header">
+    <h3>Asistente TrazaNet</h3>
+    <button class="close-chat" (click)="toggleChat()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  
+  <div class="chat-messages" #chatMessages>
+    <div class="message" *ngFor="let message of messages" [class.user-message]="message.role === 'user'">
+      <div class="message-content">
+        <i class="fas" [class.fa-user]="message.role === 'user'" [class.fa-robot]="message.role === 'assistant'"></i>
+        <div class="message-text">{{ message.content }}</div>
+      </div>
+      <div class="message-time">{{ message.timestamp | date:'HH:mm' }}</div>
+    </div>
+  </div>
+  
+  <div class="chat-input">
+    <input 
+      type="text" 
+      [(ngModel)]="currentMessage" 
+      placeholder="Escribe tu mensaje..."
+      (keyup.enter)="sendMessage()"
+      [disabled]="isProcessing">
+    <button (click)="sendMessage()" [disabled]="!currentMessage.trim() || isProcessing">
+      <i class="fas" [class.fa-paper-plane]="!isProcessing" [class.fa-spinner]="isProcessing"></i>
+    </button>
   </div>
 </div>
