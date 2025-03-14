@@ -13,13 +13,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Servir archivos estáticos del frontend
-app.use(express.static(path.join(__dirname, '../public')));
-
 // Routes API
 app.use('/api/auth', authRoutes);
 app.use('/api/excel', excelRoutes);
 app.use('/api/animales', animalesRoutes);
+
+// Servir archivos estáticos del frontend
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Manejar todas las demás rutas para Angular
 app.get('*', (req, res) => {
@@ -32,7 +32,9 @@ const PORT = process.env.PORT || 3000;
 initializeDatabase()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      console.log(`Servidor iniciado en el puerto ${PORT}`);
+      console.log(`Sirviendo archivos estáticos desde: ${path.join(__dirname, '../public')}`);
+      console.log(`Ambiente: ${process.env.NODE_ENV}`);
     });
   })
   .catch(error => {

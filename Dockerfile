@@ -3,19 +3,19 @@ FROM node:20 AS frontend-builder
 # Configurar el directorio de trabajo para el frontend
 WORKDIR /app/frontend
 
-# Copiar solo los archivos necesarios del frontend
-COPY package.json ./
+# Copiar todos los archivos necesarios para construir el frontend
+COPY package*.json ./
 COPY angular.json ./
 COPY tsconfig*.json ./
 
 # Instalar dependencias del frontend
 RUN npm install
 
-# Copiar el código fuente del frontend
+# Copiar el código fuente del frontend y archivos de configuración
 COPY src ./src
 
-# Construir la aplicación Angular
-RUN npm run build
+# Construir la aplicación Angular en modo producción
+RUN npm run build -- --configuration=production
 
 # Etapa del backend
 FROM node:20-slim
