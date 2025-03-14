@@ -1,14 +1,9 @@
 const { Pool } = require('pg');
-const fs = require('fs');
-const path = require('path');
 require('dotenv').config();
 
 const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'trazanet',
-  password: process.env.DB_PASSWORD || 'postgres',
-  port: process.env.DB_PORT || 5432,
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/trazanet',
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Función para inicializar la base de datos
@@ -49,31 +44,14 @@ const initializeDatabase = async () => {
       );
     `);
 
-    // Insertar datos de prueba
-    await pool.query(`
-      INSERT INTO animales (
-        dispositivo, raza, cruza, sexo, edad_meses, edad_dias,
-        propietario, nombre_propietario, ubicacion, tenedor,
-        status_vida, status_trazabilidad, errores,
-        fecha_identificacion, fecha_registro
-      ) VALUES 
-      ('123456', 'Holstein', 'Jersey', 'M', 24, 15, 'PROP001', 'Juan Pérez', 'Canelones', 'TEND001', 'Vivo', 'Activo', 'Ninguno', '2024-03-13', '2024-03-13'),
-      ('789012', 'Angus', 'Hereford', 'H', 36, 0, 'PROP002', 'María García', 'Montevideo', 'TEND002', 'Vivo', 'Activo', 'Ninguno', '2024-03-13', '2024-03-13')
-      ON CONFLICT DO NOTHING;
-    `);
-
-    const sqlPath = path.join(__dirname, 'init.sql');
-    const sqlScript = fs.readFileSync(sqlPath, 'utf8');
-    await pool.query(sqlScript);
     console.log('Base de datos inicializada correctamente');
   } catch (error) {
     console.error('Error al inicializar la base de datos:', error);
+    throw error;
   }
 };
 
-// Inicializar la base de datos
-initializeDatabase();
-
 module.exports = {
   query: (text, params) => pool.query(text, params),
+  initializeDatabase
 }; 
