@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, from, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface UserData {
   dicose: string;
@@ -25,7 +26,7 @@ interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:8081/api/auth';
+  private readonly API_URL = `${environment.apiUrl}/auth`;
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.checkInitialAuthState());
   isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
