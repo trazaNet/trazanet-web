@@ -1,16 +1,24 @@
 FROM node:20-alpine AS build
 
-# Instalar dependencias necesarias
-RUN apk add --no-cache python3 make g++
+# Instalar dependencias necesarias y npm
+RUN apk update && \
+    apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    npm
 
 WORKDIR /app
+
+# Verificar las versiones instaladas
+RUN node --version && npm --version
 
 # Copiar archivos de configuración
 COPY package*.json ./
 COPY .npmrc ./
 
 # Instalar dependencias
-RUN npm install
+RUN npm ci
 
 # Copiar el resto de archivos
 COPY . .
