@@ -17,13 +17,16 @@ RUN node --version && npm --version
 COPY package*.json ./
 COPY .npmrc ./
 
-# Instalar dependencias
-RUN npm install --no-optional --prefer-offline
+# Instalar dependencias globales
+RUN npm install -g @angular/cli@17.2.2
+
+# Instalar dependencias del proyecto
+RUN npm install
 
 # Copiar el resto de archivos
 COPY . .
 
-# Construir la aplicación
+# Construir la aplicación con permisos adecuados
 RUN npm run build
 
 # Etapa de producción
