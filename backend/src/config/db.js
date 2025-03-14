@@ -1,29 +1,23 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Función para obtener la configuración de la base de datos
-const getDbConfig = () => {
-  if (process.env.DATABASE_URL) {
-    return {
-      connectionString: process.env.DATABASE_URL,
-      ssl: {
-        rejectUnauthorized: false
-      }
-    };
-  }
-  
-  // Configuración local por defecto
-  return {
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'postgres',
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    database: process.env.DB_NAME || 'trazanet',
-    ssl: false
-  };
-};
+console.log('DATABASE_URL:', process.env.DATABASE_URL); // Debug log
 
-const pool = new Pool(getDbConfig());
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+// Test de conexión
+pool.on('connect', () => {
+  console.log('Base de datos conectada exitosamente');
+});
+
+pool.on('error', (err) => {
+  console.error('Error inesperado en el pool de PostgreSQL:', err);
+});
 
 // Función para inicializar la base de datos
 const initializeDatabase = async () => {
