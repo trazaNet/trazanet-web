@@ -1,30 +1,38 @@
 FROM node:20 AS builder
 
+# Configurar el directorio de trabajo
 WORKDIR /app
 
-# Copiar archivos de configuración primero
+# Copiar archivos de configuración del frontend
 COPY package*.json ./
 COPY .npmrc ./
 
-# Instalar Angular CLI y dependencias del proyecto
-RUN npm install -g @angular/cli@17.2.2 && \
-    npm install
+# Instalar dependencias del frontend
+RUN npm install
 
-# Copiar el resto de archivos
+# Copiar el resto de archivos del frontend
 COPY . .
 
-# Construir la aplicación
+# Construir la aplicación Angular
 RUN npm run build
 
-# Etapa de producción
-FROM nginx:stable
+# Etapa del backend
+FROM node:20-slim
 
-# Copiar los archivos construidos
-COPY --from=builder /app/dist/traza-net /usr/share/nginx/html
+WORKDIR /app
 
-# Copiar configuración de nginx
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copiar archivos del backend
+COPY backend/package*.json ./
+COPY backend/src ./src
 
-EXPOSE 80
+# Instalar dependencias del backend
+RUN npm install --production
 
-CMD ["nginx", "-g", "daemon off;"] 
+# Copiar los archivos construidos del frontend
+COPY --from=builder /app/dist/traza-net ./public
+
+# Exponer el puerto que Railway asignará
+EXPOSE ${PORT}
+
+# Comando para iniciar el backend
+CMD ["npm", "start"] 
