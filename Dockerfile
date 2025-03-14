@@ -1,4 +1,4 @@
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 # Instalar dependencias necesarias
 RUN apk add --no-cache python3 make g++
@@ -10,7 +10,6 @@ COPY package*.json ./
 COPY .npmrc ./
 
 # Instalar dependencias
-RUN npm install -g npm@latest
 RUN npm install
 
 # Copiar el resto de archivos
