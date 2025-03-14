@@ -25,11 +25,12 @@ WORKDIR /app
 
 # Copiar archivos del backend
 COPY backend/package*.json ./
-COPY backend/.npmrc ./
-COPY backend/src ./src
 
 # Instalar dependencias del backend
 RUN npm install --production
+
+# Copiar el código fuente del backend
+COPY backend/src ./src
 
 # Crear directorio public y copiar los archivos construidos del frontend
 RUN mkdir -p public
