@@ -18,7 +18,7 @@ COPY package*.json ./
 COPY .npmrc ./
 
 # Instalar dependencias
-RUN npm ci
+RUN npm install --no-optional --prefer-offline
 
 # Copiar el resto de archivos
 COPY . .
