@@ -5,14 +5,17 @@ require('dotenv').config({ path: path.join(__dirname, '../../../.env') });
 // Debug logs
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Current working directory:', process.cwd());
-console.log('DATABASE_URL:', process.env.DATABASE_URL || 'No DATABASE_URL found');
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set');
+// Intentar obtener la URL de la base de datos de cualquiera de las variables
+const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
+console.log('Database URL found:', databaseUrl ? 'Yes' : 'No');
+
+if (!databaseUrl) {
+  throw new Error('No se encontró la URL de la base de datos. Asegúrate de que DATABASE_URL o DATABASE_PUBLIC_URL esté configurada.');
 }
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: databaseUrl,
   ssl: {
     rejectUnauthorized: false
   }
