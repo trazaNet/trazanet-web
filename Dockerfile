@@ -3,9 +3,8 @@ FROM node:20 AS frontend-builder
 # Configurar el directorio de trabajo para el frontend
 WORKDIR /app/frontend
 
-# Copiar archivos de configuración del frontend
-COPY package*.json ./
-COPY .npmrc ./
+# Copiar solo los archivos necesarios del frontend
+COPY package.json ./
 COPY angular.json ./
 COPY tsconfig*.json ./
 
@@ -23,8 +22,8 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Copiar archivos del backend
-COPY backend/package*.json ./
+# Copiar solo el package.json del backend
+COPY backend/package.json ./package.json
 
 # Instalar dependencias del backend
 RUN npm install --production
