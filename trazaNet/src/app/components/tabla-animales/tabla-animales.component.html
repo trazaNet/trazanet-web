@@ -52,8 +52,8 @@
           <td [innerHTML]="animal.raza | highlight:terminoBusqueda"></td>
           <td [innerHTML]="animal.cruza | highlight:terminoBusqueda"></td>
           <td [innerHTML]="animal.sexo | highlight:terminoBusqueda"></td>
-          <td [innerHTML]="animal.edadMeses.toString() | highlight:terminoBusqueda"></td>
-          <td [innerHTML]="animal.edadDias.toString() | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="(animal.edadMeses || 0).toString() | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="(animal.edadDias || 0).toString() | highlight:terminoBusqueda"></td>
           <td [innerHTML]="animal.propietario | highlight:terminoBusqueda"></td>
           <td class="nombre-propietario">
             <ng-container *ngIf="!editingName[animal.propietario]">

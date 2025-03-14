@@ -15,6 +15,7 @@
           <p>Ganadera</p>
         </div>
       </div>
+      <p>¿Ya tienes una cuenta? Inicia sesión para continuar.</p>
       <button class="ghost" (click)="togglePanel(false)">INICIAR SESIÓN</button>
     </div>
   </div>
@@ -32,15 +33,20 @@
       
       <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="register-form">
         <div class="form-group">
-          <label for="fullName">Nombre completo</label>
+          <label for="dicose">DICOSE</label>
           <input 
             type="text" 
-            id="fullName" 
-            name="fullName"
-            [(ngModel)]="fullName" 
+            id="dicose" 
+            name="dicose"
+            [(ngModel)]="dicose" 
             required
-            #fullNameInput="ngModel"
-            placeholder="Ingrese su nombre completo">
+            pattern="[0-9]*"
+            #dicoseInput="ngModel"
+            placeholder="Ingrese su número DICOSE">
+          <div class="error-hint" *ngIf="dicoseInput.invalid && (dicoseInput.dirty || dicoseInput.touched)">
+            <small *ngIf="dicoseInput.errors?.['pattern']">Solo se permiten números</small>
+            <small *ngIf="dicoseInput.errors?.['required']">DICOSE es requerido</small>
+          </div>
         </div>
 
         <div class="form-group">
@@ -52,20 +58,30 @@
             [(ngModel)]="email" 
             required
             email
+            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
             #emailInput="ngModel"
             placeholder="Ingrese su correo electrónico">
+          <div class="error-hint" *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)">
+            <small *ngIf="emailInput.errors?.['email']">Ingrese un correo electrónico válido</small>
+            <small *ngIf="emailInput.errors?.['required']">El correo electrónico es requerido</small>
+          </div>
         </div>
 
         <div class="form-group">
-          <label for="username">Nombre de usuario</label>
+          <label for="phone">Teléfono</label>
           <input 
-            type="text" 
-            id="username" 
-            name="username"
-            [(ngModel)]="username" 
+            type="tel" 
+            id="phone" 
+            name="phone"
+            [(ngModel)]="phone" 
             required
-            #usernameInput="ngModel"
-            placeholder="Elija un nombre de usuario">
+            pattern="[0-9]*"
+            #phoneInput="ngModel"
+            placeholder="Ingrese su número de teléfono">
+          <div class="error-hint" *ngIf="phoneInput.invalid && (phoneInput.dirty || phoneInput.touched)">
+            <small *ngIf="phoneInput.errors?.['pattern']">Solo se permiten números</small>
+            <small *ngIf="phoneInput.errors?.['required']">El teléfono es requerido</small>
+          </div>
         </div>
 
         <div class="form-group">
@@ -83,6 +99,10 @@
             <button type="button" class="toggle-password" (click)="togglePassword()">
               <i class="fas" [class.fa-eye]="!showPassword" [class.fa-eye-slash]="showPassword"></i>
             </button>
+          </div>
+          <div class="error-hint" *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)">
+            <small *ngIf="passwordInput.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres</small>
+            <small *ngIf="passwordInput.errors?.['required']">La contraseña es requerida</small>
           </div>
         </div>
 

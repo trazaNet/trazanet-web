@@ -1,11 +1,13 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional, Annotated
 import os
 from dotenv import load_dotenv
 import openai
 import logging
+from sqlalchemy import create_engine, Column, Integer, String, Boolean
+from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -15,6 +17,54 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 logger.info(f"MODEL_NAME: {os.getenv('MODEL_NAME')}")
 logger.info(f"API Key configurada: {'Sí' if os.getenv('OPENAI_API_KEY') else 'No'}")
+
+# Configuración de la base de datos
+DATABASE_URL = "postgresql+psycopg://truc0:retrucovale4@localhost/trazaNet"
+
+# Modelo SQLAlchemy para la base de datos
+class Base(DeclarativeBase):
+    pass
+
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    dicose = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)
+    phone = Column(String)
+    hashed_password = Column(String)
+    is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)
+
+# Variables globales para la base de datos
+engine = None
+SessionLocal = None
+
+# Función para inicializar la base de datos
+def init_db():
+    global engine, SessionLocal
+    try:
+        logger.info("Intentando conectar a la base de datos...")
+        engine = create_engine(DATABASE_URL)
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        Base.metadata.create_all(bind=engine)
+        logger.info("Conexión a la base de datos establecida exitosamente")
+    except Exception as e:
+        logger.error(f"Error al conectar a la base de datos: {str(e)}")
+        raise
+
+# Dependencia para obtener la sesión de la base de datos
+def get_db() -> Session:
+    if SessionLocal is None:
+        init_db()
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# Tipo anotado para la dependencia de la base de datos
+DB = Annotated[Session, Depends(get_db)]
 
 app = FastAPI()
 
@@ -69,6 +119,56 @@ async def chat_with_ai(request: ChatRequest):
 async def health_check():
     return {"status": "ok"}
 
+# Modelo Pydantic para la API
+class UserCreate(BaseModel):
+    dicose: str
+    email: str
+    password: str
+    phone: str
+    is_admin: bool = False
+
+class UserResponse(BaseModel):
+    id: int
+    dicose: str
+    email: str
+    phone: str
+    is_active: bool
+    is_admin: bool
+
+    class Config:
+        from_attributes = True
+
+# Nuevos endpoints para usuarios
+@app.post("/api/users/", response_model=UserResponse)
+def create_user(user: UserCreate, db: DB):
+    # Aquí deberías agregar la lógica para hashear la contraseña
+    db_user = User(
+        dicose=user.dicose,
+        email=user.email,
+        phone=user.phone,
+        hashed_password=user.password,  # En un caso real, deberías hashear la contraseña
+        is_admin=user.is_admin
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+@app.get("/api/users/", response_model=List[UserResponse])
+def read_users(db: DB, skip: int = 0, limit: int = 100):
+    users = db.query(User).offset(skip).limit(limit).all()
+    return users
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    try:
+        logger.info("Iniciando el servidor...")
+        uvicorn.run(
+            app,
+            host="0.0.0.0",  # Permite conexiones desde cualquier interfaz
+            port=8000,
+            log_level="info"
+        )
+    except Exception as e:
+        logger.error(f"Error al iniciar el servidor: {str(e)}")
+        raise 

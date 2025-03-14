@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { Animal } from '../../interfaces/animal.interface';
 import { AnimalesService } from '../../services/animales.service';
 import { ListasPersonalizadasService } from '../../services/listas-personalizadas.service';
+import { ExcelService } from '../../services/excel.service';
 import { ListaPersonalizada } from '../../interfaces/lista-personalizada.interface';
 import { HighlightPipe } from '../../pipes/highlight.pipe';
 import * as XLSX from 'xlsx';
@@ -55,11 +56,14 @@ export class TablaAnimalesComponent implements OnInit {
   constructor(
     private animalesService: AnimalesService,
     private listasService: ListasPersonalizadasService,
+    private excelService: ExcelService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private router: Router
   ) {}
 
   ngOnInit() {
+    this.cargarDatosIniciales();
+
     this.animalesService.animales$.subscribe(animales => {
       this.animales = animales;
       this.animalesFiltrados = animales;
@@ -69,45 +73,18 @@ export class TablaAnimalesComponent implements OnInit {
     this.listasService.listas$.subscribe(listas => {
       this.listas = listas;
     });
+  }
 
-    // Solo cargar el archivo en el navegador
-    if (isPlatformBrowser(this.platformId)) {
-      try {
-        const workbook = XLSX.readFile('src/assets/animales_170102_11220249_1446.xls');
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        
-        const range = XLSX.utils.decode_range(firstSheet['!ref'] || 'A1');
-        const animales: Animal[] = [];
-
-        for (let row = 1; row <= range.e.r; row++) {
-          const animal: Animal = {
-            dispositivo: this.getCellValue(firstSheet, 0, row) || '',
-            raza: this.getCellValue(firstSheet, 1, row) || '',
-            cruza: this.getCellValue(firstSheet, 2, row) || '',
-            sexo: this.getCellValue(firstSheet, 3, row) || '',
-            edadMeses: parseInt(this.getCellValue(firstSheet, 4, row) || '0'),
-            edadDias: parseInt(this.getCellValue(firstSheet, 5, row) || '0'),
-            propietario: this.getCellValue(firstSheet, 6, row) || '',
-            nombrePropietario: '',
-            ubicacion: this.getCellValue(firstSheet, 7, row) || '',
-            tenedor: this.getCellValue(firstSheet, 8, row) || '',
-            statusVida: this.getCellValue(firstSheet, 9, row) || '',
-            statusTrazabilidad: this.getCellValue(firstSheet, 10, row) || '',
-            errores: this.getCellValue(firstSheet, 11, row) || '',
-            fechaIdentificacion: this.getCellValue(firstSheet, 12, row) || '',
-            fechaRegistro: this.getCellValue(firstSheet, 13, row) || ''
-          };
-
-          if (animal.dispositivo) {
-            animales.push(animal);
-          }
-        }
-
+  private cargarDatosIniciales() {
+    this.animalesService.cargarDatosIniciales().subscribe({
+      next: (animales) => {
+        console.log('Datos cargados:', animales);
         this.animalesService.setAnimales(animales);
-      } catch (error) {
-        console.error('Error al cargar el archivo inicial:', error);
+      },
+      error: (error) => {
+        console.error('Error al cargar datos:', error);
       }
-    }
+    });
   }
 
   private actualizarNombresPropietarios() {
@@ -245,51 +222,20 @@ export class TablaAnimalesComponent implements OnInit {
   }
 
   private async readExcelFile(file: File) {
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-
-      const range = XLSX.utils.decode_range(firstSheet['!ref'] || 'A1');
-      const animales: Animal[] = [];
-
-      for (let row = 1; row <= range.e.r; row++) {
-        const animal: Animal = {
-          dispositivo: this.getCellValue(firstSheet, 0, row) || '',
-          raza: this.getCellValue(firstSheet, 1, row) || '',
-          cruza: this.getCellValue(firstSheet, 2, row) || '',
-          sexo: this.getCellValue(firstSheet, 3, row) || '',
-          edadMeses: parseInt(this.getCellValue(firstSheet, 4, row) || '0'),
-          edadDias: parseInt(this.getCellValue(firstSheet, 5, row) || '0'),
-          propietario: this.getCellValue(firstSheet, 6, row) || '',
-          nombrePropietario: '',
-          ubicacion: this.getCellValue(firstSheet, 7, row) || '',
-          tenedor: this.getCellValue(firstSheet, 8, row) || '',
-          statusVida: this.getCellValue(firstSheet, 9, row) || '',
-          statusTrazabilidad: this.getCellValue(firstSheet, 10, row) || '',
-          errores: this.getCellValue(firstSheet, 11, row) || '',
-          fechaIdentificacion: this.getCellValue(firstSheet, 12, row) || '',
-          fechaRegistro: this.getCellValue(firstSheet, 13, row) || ''
-        };
-
-        if (animal.dispositivo) {
-          if (animal.propietario && this.propietariosNombres[animal.propietario]) {
-            animal.nombrePropietario = this.propietariosNombres[animal.propietario];
-          }
-          animales.push(animal);
+    try {
+      await this.excelService.cargarExcel(file).toPromise();
+      // Recargar los datos después de subir el archivo
+      this.excelService.obtenerDatos().subscribe({
+        next: (animales) => {
+          this.animalesService.setAnimales(animales);
+        },
+        error: (error) => {
+          console.error('Error al recargar datos:', error);
         }
-      }
-
-      this.animalesService.setAnimales(animales);
-    };
-    reader.readAsArrayBuffer(file);
-  }
-
-  private getCellValue(sheet: XLSX.WorkSheet, col: number, row: number): string {
-    const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-    const cell = sheet[cellRef];
-    return cell ? cell.v?.toString() : '';
+      });
+    } catch (error) {
+      console.error('Error al cargar el archivo:', error);
+    }
   }
 
   buscar() {

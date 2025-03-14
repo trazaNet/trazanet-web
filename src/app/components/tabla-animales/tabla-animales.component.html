@@ -1,5 +1,102 @@
 <div class="container">
-  <!-- Área de drop que solo se muestra cuando se arrastra un archivo -->
+  <!-- Barra de búsqueda y botones -->
+  <div class="toolbar">
+    <div class="search-box">
+      <input 
+        type="text" 
+        [(ngModel)]="terminoBusqueda" 
+        (input)="buscar()"
+        placeholder="Buscar en todos los campos..."
+        class="form-control">
+    </div>
+    
+    <div class="action-buttons">
+      <button class="btn btn-primary" (click)="fileInput.click()">
+        <i class="fas fa-file-excel"></i> Cargar Excel
+      </button>
+      <button class="btn btn-danger" (click)="vaciarLista()">
+        <i class="fas fa-trash"></i> Vaciar Lista
+      </button>
+      <input 
+        #fileInput
+        type="file" 
+        (change)="onFileSelected($event)"
+        accept=".xls,.xlsx"
+        style="display: none;">
+    </div>
+  </div>
+
+  <!-- Tabla de animales -->
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Dispositivo</th>
+          <th>Raza</th>
+          <th>Cruza</th>
+          <th>Sexo</th>
+          <th>Edad (meses)</th>
+          <th>Edad (días)</th>
+          <th>Propietario</th>
+          <th>Nombre Propietario</th>
+          <th>Ubicación</th>
+          <th>Tenedor</th>
+          <th>Status de vida</th>
+          <th>Status de trazabilidad</th>
+          <th>Errores</th>
+          <th>Fecha identificación</th>
+          <th>Fecha registro</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let animal of animalesFiltrados" 
+            (contextmenu)="onContextMenu($event, animal)"
+            [class.selected]="animal === selectedAnimal">
+          <td [innerHTML]="animal.dispositivo | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="animal.raza | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="animal.cruza | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="animal.sexo | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="animal.edad_meses?.toString() | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="animal.edad_dias?.toString() | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="animal.propietario | highlight:terminoBusqueda"></td>
+          <td>
+            <div *ngIf="editingName !== animal.nombre_propietario">
+              <span [innerHTML]="animal.nombre_propietario | highlight:terminoBusqueda"></span>
+              <button class="btn btn-sm btn-link" (click)="editarNombre(animal)">
+                <i class="fas fa-edit"></i>
+              </button>
+            </div>
+            <div *ngIf="editingName === animal.nombre_propietario" class="nombre-propietario">
+              <input 
+                type="text" 
+                [value]="animal.nombre_propietario"
+                #nombreInput
+                class="form-control form-control-sm">
+              <button class="btn btn-sm btn-success" (click)="guardarNombre(animal, nombreInput.value)">
+                <i class="fas fa-check"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" (click)="cancelarEdicion(animal.propietario)">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </td>
+          <td [innerHTML]="animal.ubicacion | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="animal.tenedor | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="animal.status_vida | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="animal.status_trazabilidad | highlight:terminoBusqueda"></td>
+          <td [innerHTML]="animal.errores | highlight:terminoBusqueda"></td>
+          <td>{{animal.fecha_identificacion | date:'dd/MM/yyyy'}}</td>
+          <td>{{animal.fecha_registro | date:'dd/MM/yyyy'}}</td>
+        </tr>
+        <tr *ngIf="animalesFiltrados.length === 0">
+          <td colspan="15" class="text-center">
+            No hay datos disponibles
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
   <div class="drop-overlay" *ngIf="isDragging">
     <div class="drop-zone">
       <div class="drop-message">
@@ -10,14 +107,14 @@
   </div>
 
   <!-- Menú contextual -->
-  <div 
-    *ngIf="showContextMenu" 
-    class="context-menu"
-    [style.left.px]="contextMenuPosition.x"
-    [style.top.px]="contextMenuPosition.y"
-    (click)="onContextMenuClick($event)"
-  >
-    // ... existing code ...
+  <div *ngIf="showContextMenu" 
+       class="context-menu"
+       [style.left.px]="contextMenuPosition.x"
+       [style.top.px]="contextMenuPosition.y"
+       (click)="onContextMenuClick($event)">
+    <button class="btn btn-link" (click)="editarNombre(selectedAnimal)">
+      <i class="fas fa-edit"></i> Editar Nombre
+    </button>
   </div>
 
   <!-- Input para nueva lista -->
@@ -30,8 +127,11 @@
     // ... existing code ...
   </div>
 
-  <!-- Contenido principal que siempre se muestra -->
-  <div class="content">
-    // ... existing code ...
+  <!-- Botón grande de eliminar -->
+  <div class="delete-button-container">
+    <button class="btn btn-danger btn-lg delete-button" (click)="vaciarLista()">
+      <i class="fas fa-trash-alt fa-2x mb-2"></i>
+      <span>ELIMINAR TODOS LOS DATOS</span>
+    </button>
   </div>
 </div> 

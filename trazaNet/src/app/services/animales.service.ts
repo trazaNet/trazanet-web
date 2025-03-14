@@ -1,16 +1,30 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { Animal } from '../interfaces/animal.interface';
 import * as XLSX from 'xlsx';
+import { HttpClient } from '@angular/common/http';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AnimalesService {
+  private readonly API_URL = 'http://localhost:3001/api/excel';
   private animalesSubject = new BehaviorSubject<Animal[]>([]);
   animales$ = this.animalesSubject.asObservable();
 
-  constructor() {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
+
+  cargarDatosIniciales(): Observable<Animal[]> {
+    return this.http.get<Animal[]>(`${this.API_URL}/data`, {
+      headers: {
+        Authorization: `Bearer ${this.authService.getToken()}`
+      }
+    });
+  }
 
   setAnimales(animales: Animal[]) {
     this.animalesSubject.next(animales);

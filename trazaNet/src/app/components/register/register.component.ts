@@ -14,9 +14,9 @@ import { AuthAnimationService } from '../../services/auth-animation.service';
   styleUrls: ['./register.component.css']
 })
 export class RegisterComponent {
-  fullName: string = '';
+  dicose: string = '';
   email: string = '';
-  username: string = '';
+  phone: string = '';
   password: string = '';
   showPassword: boolean = false;
   errorMessage: string = '';
@@ -31,18 +31,32 @@ export class RegisterComponent {
     this.showPassword = !this.showPassword;
   }
 
-  onSubmit() {
-    // Aquí iría la lógica de registro
-    console.log('Registro:', { fullName: this.fullName, email: this.email, username: this.username });
+  async onSubmit() {
+    try {
+      const userData = {
+        dicose: this.dicose,
+        email: this.email,
+        phone: this.phone,
+        password: this.password
+      };
+
+      await this.authService.register(userData);
+      this.router.navigate(['/dashboard']);
+    } catch (error: any) {
+      this.errorMessage = error.message || 'Error al registrar usuario';
+    }
   }
 
-  registerWithGoogle() {
-    // Aquí iría la lógica de registro con Google
-    console.log('Registro con Google');
-    this.errorMessage = 'El registro con Google estará disponible próximamente';
+  async registerWithGoogle() {
+    try {
+      await this.authService.googleSignIn();
+      this.router.navigate(['/dashboard']);
+    } catch (error: any) {
+      this.errorMessage = error.message || 'Error al registrar con Google';
+    }
   }
 
-  togglePanel(showRegister: boolean) {
-    this.authAnimationService.togglePanel(showRegister);
+  togglePanel(isSignUp: boolean) {
+    this.authAnimationService.togglePanel(isSignUp);
   }
 } 

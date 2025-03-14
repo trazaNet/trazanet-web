@@ -14,7 +14,7 @@ import { AuthAnimationService } from '../../services/auth-animation.service';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  username: string = '';
+  email: string = '';
   password: string = '';
   errorMessage: string = '';
   showPassword: boolean = false;
@@ -30,11 +30,16 @@ export class LoginComponent {
   }
 
   onSubmit() {
-    if (this.authService.login(this.username, this.password)) {
-      this.router.navigate(['/inicio']);
-    } else {
-      this.errorMessage = 'Usuario o contraseña incorrectos';
-    }
+    this.errorMessage = '';
+    this.authService.login(this.email, this.password).subscribe({
+      next: () => {
+        this.router.navigate(['/datos']);
+      },
+      error: (error) => {
+        console.error('Error en el login:', error);
+        this.errorMessage = 'Usuario o contraseña incorrectos';
+      }
+    });
   }
 
   loginWithGoogle() {

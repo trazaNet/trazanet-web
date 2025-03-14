@@ -38,7 +38,56 @@ app-theme-switch {
   color: white;
   text-align: center;
   order: 1;
-  position: relative;
+}
+
+.overlay-panel {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Formulario (derecha) */
+.sign-up-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  order: 2;
+}
+
+.form-content {
+  width: 100%;
+  max-width: 320px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.register-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Resto de estilos igual que en register.component.css */
+.brand-container {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.brand-container h1 {
+  font-size: 3rem;
+  color: white;
+  margin-bottom: 0.75rem;
+}
+
+.dot {
+  color: var(--light-green);
 }
 
 .subtitle-block {
@@ -64,57 +113,6 @@ app-theme-switch {
   color: var(--light-green);
 }
 
-.overlay-panel {
-  padding: 30px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding-top: 60px;
-}
-
-/* Formulario (derecha) */
-.sign-up-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  order: 2;
-}
-
-.form-content {
-  width: 100%;
-  max-width: 320px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.register-form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* Estilos del contenido */
-.brand-container {
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
-.brand-container h1 {
-  font-size: 3rem;
-  color: white;
-  margin-bottom: 0.75rem;
-}
-
-.dot {
-  color: var(--light-green);
-}
-
 .tagline {
   font-size: 1.6rem;
 }
@@ -132,19 +130,19 @@ app-theme-switch {
 
 /* Estilos de formulario */
 h1 {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   color: var(--text-primary);
 }
 
 .social-container {
-  margin: 8px 0;
+  margin: 15px 0;
 }
 
 .social {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: inline-flex;
   justify-content: center;
@@ -165,7 +163,7 @@ h1 {
 }
 
 .social i {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .form-group {
@@ -175,18 +173,18 @@ h1 {
 
 .form-group label {
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   text-align: left;
 }
 
 .form-group input {
   width: 100%;
-  padding: 8px 12px;
+  padding: 12px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   transition: all 0.3s ease;
   background-color: var(--background-grey);
 }
@@ -217,7 +215,7 @@ h1 {
 
 /* Botones */
 button {
-  padding: 10px;
+  padding: 12px;
   border-radius: 8px;
   border: none;
   background-color: var(--primary-green);
@@ -226,7 +224,7 @@ button {
   letter-spacing: 0.5px;
   transition: all 0.3s ease;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   width: 100%;
 }
 
@@ -248,7 +246,7 @@ button.ghost {
   padding: 12px 40px;
   font-size: 0.9rem;
   border-radius: 25px;
-  margin-top: 0;
+  margin-top: 1rem;
 }
 
 button.ghost:hover {
@@ -257,9 +255,15 @@ button.ghost:hover {
 }
 
 span {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  margin: 5px 0 8px;
+  margin: 10px 0 15px;
+}
+
+.error-hint {
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
 }
 
 .error-message {

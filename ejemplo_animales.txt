@@ -1,0 +1,13 @@
+El archivo Excel debe tener las siguientes columnas en este orden:
+
+dispositivo | raza | cruza | sexo | edadMeses | edadDias | propietario | nombrePropietario | ubicacion | tenedor | statusVida | statusTrazabilidad | errores | fechaIdentificacion | fechaRegistro
+
+Ejemplo de datos:
+123456 | Holstein | Jersey | M | 24 | 15 | PROP001 | Juan Pérez | Canelones | TEND001 | Vivo | Activo | Ninguno | 2024-03-13 | 2024-03-13
+789012 | Angus | Hereford | H | 36 | 0 | PROP002 | María García | Montevideo | TEND002 | Vivo | Activo | Ninguno | 2024-03-13 | 2024-03-13
+
+Notas importantes:
+1. Los nombres de las columnas deben ser exactamente como se muestran arriba
+2. Las fechas deben estar en formato YYYY-MM-DD
+3. Los campos numéricos (edadMeses y edadDias) deben ser números enteros
+4. Si un campo no tiene valor, dejarlo vacío pero mantener los separadores 

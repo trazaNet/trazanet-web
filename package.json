@@ -1,12 +1,18 @@
 {
   "dependencies": {
     "@angular/cli": "^17.0.0",
-    "@angular/common": "^19.1.6",
+    "@angular/common": "^19.2.2",
     "@angular/core": "^19.1.6",
-    "@angular/platform-browser": "^19.1.6",
+    "@angular/forms": "^19.2.2",
+    "@angular/platform-browser": "^19.2.2",
     "@angular/platform-browser-dynamic": "^19.1.6",
-    "@angular/router": "^19.1.6",
+    "@angular/router": "^19.2.2",
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "bootstrap": "^5.3.3",
     "lottie-web": "^5.12.2",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^19.2.1"
   }
 }
