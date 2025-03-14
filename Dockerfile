@@ -1,8 +1,10 @@
 FROM node:20 AS builder
 
-# Crear un usuario no root
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 --gid 1001 nextjs
+# Crear un usuario no root con un directorio home válido
+RUN mkdir -p /home/nextjs && \
+    addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 --gid 1001 --home /home/nextjs nextjs && \
+    chown -R nextjs:nodejs /home/nextjs
 
 # Configurar el directorio de trabajo y los permisos
 WORKDIR /app
@@ -11,17 +13,22 @@ RUN chown nextjs:nodejs /app
 # Establecer variables de entorno
 ENV NODE_ENV=production
 ENV PATH /app/node_modules/.bin:$PATH
+ENV NPM_CONFIG_PREFIX=/home/nextjs/.npm-global
+ENV PATH=$PATH:/home/nextjs/.npm-global/bin
+
+# Cambiar al usuario no root
+USER nextjs
+
+# Crear y configurar el directorio para npm global
+RUN mkdir -p /home/nextjs/.npm-global && \
+    npm config set prefix '/home/nextjs/.npm-global'
 
 # Copiar archivos de configuración primero
 COPY --chown=nextjs:nodejs package*.json ./
 COPY --chown=nextjs:nodejs .npmrc ./
 
-# Cambiar al usuario no root
-USER nextjs
-
 # Instalar dependencias
-RUN npm config set registry https://registry.npmjs.org/ && \
-    npm install -g @angular/cli@17.2.2 && \
+RUN npm install -g @angular/cli@17.2.2 && \
     npm install
 
 # Copiar el resto de archivos
