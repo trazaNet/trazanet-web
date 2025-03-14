@@ -1,39 +1,28 @@
-FROM node:20-alpine AS build
-
-# Instalar dependencias necesarias y npm
-RUN apk update && \
-    apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    npm
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Verificar las versiones instaladas
-RUN node --version && npm --version
-
-# Copiar archivos de configuración
+# Copiar archivos de configuración primero
 COPY package*.json ./
 COPY .npmrc ./
 
-# Instalar dependencias globales
-RUN npm install -g @angular/cli@17.2.2
-
-# Instalar dependencias del proyecto
+# Instalar dependencias
 RUN npm install
 
 # Copiar el resto de archivos
 COPY . .
 
-# Construir la aplicación con permisos adecuados
+# Instalar Angular CLI globalmente
+RUN npm install -g @angular/cli@17.2.2
+
+# Construir la aplicación
 RUN npm run build
 
 # Etapa de producción
 FROM nginx:alpine
 
-# Copiar archivos de la etapa de build
-COPY --from=build /app/dist/traza-net /usr/share/nginx/html
+# Copiar solo los archivos construidos
+COPY --from=builder /app/dist/traza-net /usr/share/nginx/html
 
 # Copiar configuración de nginx
 COPY nginx.conf /etc/nginx/nginx.conf
