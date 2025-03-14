@@ -1,7 +1,15 @@
 const { Pool } = require('pg');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../../../.env') });
 
-console.log('DATABASE_URL:', process.env.DATABASE_URL); // Debug log
+// Debug logs
+console.log('Environment:', process.env.NODE_ENV);
+console.log('Current working directory:', process.cwd());
+console.log('DATABASE_URL:', process.env.DATABASE_URL || 'No DATABASE_URL found');
+
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -19,9 +27,25 @@ pool.on('error', (err) => {
   console.error('Error inesperado en el pool de PostgreSQL:', err);
 });
 
+// Función para probar la conexión
+const testConnection = async () => {
+  try {
+    const client = await pool.connect();
+    console.log('Conexión de prueba exitosa');
+    client.release();
+    return true;
+  } catch (err) {
+    console.error('Error al probar la conexión:', err);
+    throw err;
+  }
+};
+
 // Función para inicializar la base de datos
 const initializeDatabase = async () => {
   try {
+    // Primero probamos la conexión
+    await testConnection();
+    
     // Crear tabla de usuarios si no existe
     await pool.query(`
       CREATE TABLE IF NOT EXISTS usuarios (
