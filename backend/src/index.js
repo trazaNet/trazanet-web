@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const authRoutes = require('./routes/auth');
 const excelRoutes = require('./routes/excel.routes');
 const animalesRoutes = require('./routes/animales.routes');
@@ -12,10 +13,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// Servir archivos estáticos del frontend
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Routes API
 app.use('/api/auth', authRoutes);
 app.use('/api/excel', excelRoutes);
 app.use('/api/animales', animalesRoutes);
+
+// Manejar todas las demás rutas para Angular
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
 
 const PORT = process.env.PORT || 3000;
 
