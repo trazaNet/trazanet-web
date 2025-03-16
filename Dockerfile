@@ -14,7 +14,8 @@ COPY frontend/. .
 
 # Construir la aplicación Angular en modo producción
 RUN npm run build -- --configuration=production && \
-    ls -la dist/traza-net/
+    ls -la dist/traza-net/ && \
+    ls -la dist/traza-net/browser/
 
 # Etapa del backend
 FROM node:20.11.1-slim
@@ -35,10 +36,16 @@ RUN apt-get update && \
 COPY backend/. .
 
 # Crear directorio public y copiar los archivos del frontend
+RUN mkdir -p public
 COPY --from=frontend-builder /app/frontend/dist/traza-net/browser/. ./public/
 
-# Verificar que index.html existe
-RUN ls -la public/ && \
+# Verificar que los archivos necesarios existen
+RUN echo "Verificando archivos en public:" && \
+    ls -la public/ && \
+    echo "Verificando contenido de index.html:" && \
+    cat public/index.html | head -n 5 && \
+    echo "Verificando archivos CSS:" && \
+    find public -name "*.css" -type f && \
     if [ ! -f public/index.html ]; then \
       echo "Error: index.html not found in public directory" && \
       exit 1; \
