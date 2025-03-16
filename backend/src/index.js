@@ -9,10 +9,16 @@ const initializeDatabase = require('./db/init');
 require('dotenv').config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
 
 // Routes API
 app.use('/api/auth', authRoutes);
@@ -54,8 +60,6 @@ app.get('*', (req, res) => {
     res.status(404).send('index.html no encontrado');
   }
 });
-
-const PORT = process.env.PORT || 3000;
 
 // Inicializar la base de datos y luego iniciar el servidor
 console.log('Iniciando inicialización de la base de datos...');
