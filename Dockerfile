@@ -38,7 +38,7 @@ COPY --from=frontend-builder /app/frontend/dist/traza-net/. ./public/
 
 # Variables de entorno
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=3001
 
 # Exponer el puerto (Railway configurará el puerto automáticamente)
 EXPOSE ${PORT}
