@@ -6,7 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { ThemeSwitchComponent } from '../theme-switch/theme-switch.component';
 import { AuthAnimationService } from '../../services/auth-animation.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ToastrService } from 'ngx-toastr';
+import { ToastrModule, ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-register',
@@ -16,7 +16,8 @@ import { ToastrService } from 'ngx-toastr';
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-    ThemeSwitchComponent
+    ThemeSwitchComponent,
+    ToastrModule
   ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']

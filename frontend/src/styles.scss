@@ -323,3 +323,5 @@ input:checked + .slider:before {
     color: var(--text-secondary);
   }
 }
+
+@import 'ngx-toastr/toastr';
