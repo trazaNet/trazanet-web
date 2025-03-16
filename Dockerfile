@@ -24,7 +24,7 @@ WORKDIR /app
 COPY backend/package*.json ./
 
 # Instalar dependencias del backend y herramientas necesarias
-RUN apk add --no-cache wget && \
+RUN apk add --no-cache wget curl && \
     npm ci --only=production
 
 # Copiar el código fuente del backend
@@ -40,9 +40,9 @@ ENV PORT=3000
 # Exponer el puerto (Railway configurará el puerto automáticamente)
 EXPOSE ${PORT}
 
-# Healthcheck para Railway
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/health || exit 1
+# Healthcheck para Railway usando curl (más confiable que wget)
+HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/healthz || exit 1
 
 # Comando para iniciar el backend
 CMD ["node", "src/index.js"] 

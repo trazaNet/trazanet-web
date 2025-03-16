@@ -15,9 +15,21 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint
+// Health check endpoints - agregamos múltiples rutas para mayor compatibilidad
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.status(200).json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+app.get('/healthz', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+app.get('/_health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
 
 // Routes API
