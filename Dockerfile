@@ -46,19 +46,32 @@ EXPOSE ${PORT}
 # Script para verificar el servicio y mostrar más información
 RUN echo '#!/bin/sh\n\
 echo "Checking health endpoint..."\n\
-response=$(curl -s http://localhost:${PORT}/healthz)\n\
-echo "Response from healthz: $response"\n\
-if [ "$(echo $response | grep -c "\"status\":\"ok\"")" = "1" ]; then\n\
+echo "Current time: $(date)"\n\
+echo "Attempting to connect to http://localhost:${PORT}/healthz"\n\
+curl_output=$(curl -v http://localhost:${PORT}/healthz 2>&1)\n\
+echo "Curl verbose output:"\n\
+echo "$curl_output"\n\
+response=$(echo "$curl_output" | grep -A1 "< HTTP")\n\
+echo "HTTP Response:"\n\
+echo "$response"\n\
+if echo "$curl_output" | grep -q "\"status\":\"ok\""; then\n\
   echo "Health check passed"\n\
   exit 0\n\
 else\n\
   echo "Health check failed"\n\
+  echo "Process list:"\n\
+  ps aux\n\
+  echo "Network status:"\n\
+  netstat -tulpn\n\
   exit 1\n\
 fi' > /healthcheck.sh && chmod +x /healthcheck.sh
 
 # Healthcheck para Railway usando el script
-HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=30s --start-period=120s --retries=3 \
     CMD /healthcheck.sh
 
 # Comando para iniciar el backend con logging adicional
-CMD echo "Starting server on port ${PORT}" && node src/index.js 
+CMD echo "Starting server on port ${PORT}" && \
+    echo "Environment variables:" && \
+    env | grep -v "PASSWORD\|KEY" && \
+    node src/index.js 

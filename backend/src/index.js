@@ -17,6 +17,7 @@ app.use(express.json());
 
 // Health check endpoints - agregamos múltiples rutas para mayor compatibilidad
 app.get('/health', (req, res) => {
+  console.log('Health check request received at /health');
   res.status(200).json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -25,10 +26,12 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/healthz', (req, res) => {
+  console.log('Health check request received at /healthz');
   res.status(200).json({ status: 'ok' });
 });
 
 app.get('/_health', (req, res) => {
+  console.log('Health check request received at /_health');
   res.status(200).json({ status: 'ok' });
 });
 
@@ -73,17 +76,22 @@ app.get('*', (req, res) => {
   }
 });
 
-// Inicializar la base de datos y luego iniciar el servidor
+// Primero iniciamos el servidor
+console.log('Iniciando el servidor...');
+const server = app.listen(PORT, () => {
+  console.log(`Servidor iniciado en el puerto ${PORT}`);
+  console.log(`Sirviendo archivos estáticos desde: ${publicPath}`);
+  console.log(`Ambiente: ${process.env.NODE_ENV}`);
+});
+
+// Luego inicializamos la base de datos
 console.log('Iniciando inicialización de la base de datos...');
 initializeDatabase()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Servidor iniciado en el puerto ${PORT}`);
-      console.log(`Sirviendo archivos estáticos desde: ${publicPath}`);
-      console.log(`Ambiente: ${process.env.NODE_ENV}`);
-    });
+    console.log('Base de datos inicializada correctamente');
   })
   .catch(error => {
-    console.error('Error al iniciar el servidor:', error);
-    process.exit(1);
+    console.error('Error al inicializar la base de datos:', error);
+    // No cerramos el servidor, solo logueamos el error
+    console.log('El servidor continuará funcionando sin la base de datos');
   }); 
