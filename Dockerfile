@@ -23,8 +23,9 @@ WORKDIR /app
 # Copiar package.json del backend
 COPY backend/package*.json ./
 
-# Instalar dependencias del backend
-RUN npm ci --only=production
+# Instalar dependencias del backend y herramientas necesarias
+RUN apk add --no-cache wget && \
+    npm ci --only=production
 
 # Copiar el código fuente del backend
 COPY backend/. .
@@ -36,7 +37,7 @@ COPY --from=frontend-builder /app/frontend/dist/traza-net/. ./public/
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Exponer el puerto
+# Exponer el puerto (Railway configurará el puerto automáticamente)
 EXPOSE ${PORT}
 
 # Healthcheck para Railway
