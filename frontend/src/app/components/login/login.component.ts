@@ -52,48 +52,17 @@ export class LoginComponent {
     this.showPassword = !this.showPassword;
   }
 
-  onSubmit() {
-    if (this.isRegistering) {
-      const userData: UserData = {
-        email: this.email,
-        password: this.password,
-        dicose: this.dicose,
-        phone: this.phone
-      };
+  async onSubmit() {
+    if (!this.email || !this.password) {
+      this.errorMessage = 'Por favor complete todos los campos';
+      return;
+    }
 
-      this.authService.register(userData).then(() => {
-        console.log('Registro exitoso');
-        this.router.navigate(['/inicio']);
-      }).catch(error => {
-        console.error('Error en el registro:', error);
-        this.errorMessage = error.message || 'Ha ocurrido un error en el registro';
-      });
-    } else {
-      // Login directo para pruebas
-      if (this.email === 'dev123' && this.password === 'dev123') {
-        console.log('Login exitoso con credenciales de prueba');
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('auth_token', 'test_token');
-        localStorage.setItem('user_data', JSON.stringify({
-          email: 'dev123',
-          role: 'admin'
-        }));
-        this.authService['isAuthenticatedSubject'].next(true);
-        this.router.navigate(['/inicio']);
-        return;
-      }
-
-      // Si no son las credenciales de prueba, usar el servicio de auth
-      this.authService.login(this.email, this.password).subscribe({
-        next: () => {
-          console.log('Login exitoso');
-          this.router.navigate(['/inicio']);
-        },
-        error: (error) => {
-          console.error('Error en el login:', error);
-          this.errorMessage = error.message || 'Ha ocurrido un error en el login';
-        }
-      });
+    try {
+      await this.authService.login({ email: this.email, password: this.password });
+      this.router.navigate(['/dashboard']);
+    } catch (error: any) {
+      this.errorMessage = error.message || 'Error al iniciar sesión';
     }
   }
 } 
