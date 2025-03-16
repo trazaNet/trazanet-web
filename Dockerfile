@@ -16,7 +16,7 @@ COPY frontend/. .
 RUN npm run build -- --configuration=production
 
 # Etapa del backend
-FROM node:20.11.1-alpine
+FROM node:20.11.1-slim
 
 WORKDIR /app
 
@@ -24,8 +24,11 @@ WORKDIR /app
 COPY backend/package*.json ./
 
 # Instalar dependencias del backend y herramientas necesarias
-RUN apk add --no-cache wget curl && \
-    npm ci --only=production
+RUN apt-get update && \
+    apt-get install -y curl python3 make g++ && \
+    npm ci --only=production && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copiar el código fuente del backend
 COPY backend/. .
@@ -40,7 +43,7 @@ ENV PORT=3000
 # Exponer el puerto (Railway configurará el puerto automáticamente)
 EXPOSE ${PORT}
 
-# Healthcheck para Railway usando curl (más confiable que wget)
+# Healthcheck para Railway usando curl
 HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:${PORT}/healthz || exit 1
 
