@@ -13,7 +13,8 @@ RUN npm ci
 COPY frontend/. .
 
 # Construir la aplicación Angular en modo producción
-RUN npm run build -- --configuration=production
+RUN npm run build -- --configuration=production && \
+    ls -la dist/traza-net/
 
 # Etapa del backend
 FROM node:20.11.1-slim
@@ -34,7 +35,14 @@ RUN apt-get update && \
 COPY backend/. .
 
 # Crear directorio public y copiar los archivos del frontend
-COPY --from=frontend-builder /app/frontend/dist/traza-net/. ./public/
+COPY --from=frontend-builder /app/frontend/dist/traza-net/browser/. ./public/
+
+# Verificar que index.html existe
+RUN ls -la public/ && \
+    if [ ! -f public/index.html ]; then \
+      echo "Error: index.html not found in public directory" && \
+      exit 1; \
+    fi
 
 # Variables de entorno
 ENV NODE_ENV=production
@@ -74,4 +82,6 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=120s --retries=3 \
 CMD echo "Starting server on port ${PORT}" && \
     echo "Environment variables:" && \
     env | grep -v "PASSWORD\|KEY" && \
+    echo "Contents of public directory:" && \
+    ls -la public/ && \
     node src/index.js 
