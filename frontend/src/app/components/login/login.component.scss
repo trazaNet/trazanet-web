@@ -7,7 +7,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--background-grey);
+  background: var(--background-primary);
   overflow: hidden;
 }
 
@@ -98,14 +98,15 @@
 }
 
 .container {
-  background-color: var(--background-light, #ffffff);
+  background-color: var(--background-secondary);
   border-radius: 16px;
-  box-shadow: 0 14px 28px rgba(0,0,0,0.15), 0 10px 10px rgba(0,0,0,0.12);
+  box-shadow: var(--shadow-lg);
   position: relative;
   overflow: hidden;
   width: 768px;
   height: 480px;
   margin: 20px;
+  transition: all 0.3s ease;
 }
 
 .form-container {
@@ -180,10 +181,10 @@
 }
 
 .overlay {
-  background: var(--primary-green, #2E7D32);
+  background: var(--primary-green);
   background: linear-gradient(135deg, 
-    var(--primary-green, #2E7D32) 0%, 
-    var(--secondary-green, #43A047) 100%
+    var(--primary-green) 0%, 
+    var(--secondary-green) 100%
   );
   background-repeat: no-repeat;
   background-size: cover;
@@ -425,126 +426,67 @@
 }
 
 form {
-  background-color: var(--background-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
+  background-color: var(--background-secondary);
   padding: 0 50px;
   height: 100%;
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   text-align: center;
-  transition: all 0.6s ease-in-out;
 
   h1 {
-    font-weight: 700;
-    margin: 0 0 15px;
+    font-weight: bold;
+    margin: 0;
     color: var(--text-primary);
-    opacity: 0;
-    animation: fadeInDown 0.5s ease forwards;
-    animation-delay: 3.6s;
-  }
-
-  .social-container {
-    margin: 15px 0;
-    opacity: 0;
-    animation: fadeInScale 0.5s ease forwards;
-    animation-delay: 3.6s;
-
-    a {
-      border: 1px solid var(--border-color);
-      border-radius: 50%;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      margin: 0 5px;
-      height: 40px;
-      width: 40px;
-      text-decoration: none;
-      color: var(--text-primary);
-      transition: all 0.3s ease;
-
-      &:hover {
-        border-color: var(--primary-green);
-        color: var(--primary-green);
-        transform: translateY(-2px);
-      }
-
-      &.google {
-        background: var(--background-light);
-        border: none;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.25);
-
-        .fa-google {
-          background: conic-gradient(from -45deg, #ea4335 110deg, #4285f4 90deg 180deg, #34a853 180deg 270deg, #fbbc05 270deg) no-repeat center center;
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-          font-size: 20px;
-        }
-
-        &:hover {
-          box-shadow: 0 4px 8px rgba(0,0,0,0.25);
-          transform: translateY(-2px);
-        }
-
-        &:active {
-          background: var(--background-grey);
-        }
-      }
-    }
   }
 
   span {
-    font-size: 14px;
+    font-size: 12px;
     color: var(--text-secondary);
-    margin-bottom: 15px;
-    opacity: 0;
-    animation: fadeIn 0.5s ease forwards;
-    animation-delay: 3.6s;
   }
 
-  input[type="email"],
-  input[type="password"],
-  input[type="text"],
-  input[type="tel"] {
-    background-color: var(--input-background);
+  input {
+    background-color: var(--background-tertiary);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin: 6px 0;
+    padding: 12px 15px;
+    margin: 8px 0;
     width: 100%;
+    border-radius: 8px;
     color: var(--text-primary);
     transition: all 0.3s ease;
-    opacity: 0;
-    transform: translateX(-20px);
-    animation: slideInRight 0.5s ease forwards;
 
     &::placeholder {
       color: var(--text-secondary);
     }
 
-    &:nth-of-type(1) {
-      animation-delay: 3.6s;
-    }
-
-    &:nth-of-type(2) {
-      animation-delay: 3.6s;
-    }
-
-    &:nth-of-type(3) {
-      animation-delay: 3.6s;
-    }
-
-    &:nth-of-type(4) {
-      animation-delay: 3.6s;
-    }
-
     &:focus {
-      outline: none;
-      background-color: var(--input-background);
       border-color: var(--primary-green);
-      box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.3);
+      box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+    }
+  }
+
+  button {
+    border-radius: 8px;
+    background-color: var(--primary-green);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 12px 45px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    margin-top: 15px;
+
+    &:hover {
+      background-color: var(--secondary-green);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
     }
   }
 
@@ -552,44 +494,11 @@ form {
     color: var(--text-secondary);
     font-size: 14px;
     text-decoration: none;
-    margin: 12px 0;
-    transition: color 0.3s ease;
-    opacity: 0;
-    animation: fadeIn 0.5s ease forwards;
-    animation-delay: 3.6s;
+    margin: 15px 0;
+    transition: all 0.3s ease;
 
     &:hover {
       color: var(--primary-green);
-    }
-  }
-
-  button[type="submit"] {
-    border-radius: 8px;
-    border: 1px solid var(--primary-green);
-    background-color: var(--primary-green);
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 600;
-    padding: 12px 45px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-    margin-top: 12px;
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeInUp 0.5s ease forwards;
-    animation-delay: 3.6s;
-    will-change: transform, opacity;
-
-    &:hover {
-      background-color: var(--secondary-green);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-
-    &:active {
-      transform: scale(0.95);
     }
   }
 }
@@ -789,5 +698,30 @@ app-theme-switch {
   100% {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+.error-message {
+  color: #f44336;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.password-input-container {
+  position: relative;
+  width: 100%;
+
+  .toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: var(--primary-green);
+    }
   }
 } 
