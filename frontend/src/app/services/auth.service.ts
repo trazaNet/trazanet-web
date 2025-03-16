@@ -1,14 +1,17 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, from } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, from, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
 
 interface UserData {
   dicose: string;
   email: string;
   phone: string;
   password: string;
+  name?: string;
+  lastName?: string;
 }
 
 interface AuthResponse {
@@ -25,18 +28,16 @@ interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3001/api';
-  private tokenKey = 'auth_token';
-  private userKey = 'user_data';
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
+  private apiUrl = environment.production ? '/api' : 'http://localhost:3001/api';
+  private tokenKey = 'token';
+  private userKey = 'user';
+  private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
 
   constructor(
     private router: Router,
     private http: HttpClient
   ) {
-    if (!this.isLoggedIn()) {
-      this.router.navigate(['/login']);
-    }
+    this.checkAuthStatus();
   }
 
   private hasToken(): boolean {
@@ -56,17 +57,58 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
-  login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/login`, { email, password }).pipe(
-      tap((response: any) => {
-        if (response && response.token) {
-          localStorage.setItem(this.tokenKey, response.token);
-          localStorage.setItem(this.userKey, JSON.stringify(response.user));
-          localStorage.setItem('isAuthenticated', 'true');
-          this.isAuthenticatedSubject.next(true);
+  async register(userData: UserData): Promise<void> {
+    try {
+      const response = await this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData)
+        .pipe(
+          catchError(this.handleError)
+        )
+        .toPromise();
+
+      if (response?.token && response?.user) {
+        this.setAuthData(response);
+      } else {
+        throw new Error('Respuesta inválida del servidor');
+      }
+    } catch (error: any) {
+      console.error('Error en el registro:', error);
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 400) {
+          throw new Error(error.error?.message || 'Error en los datos proporcionados');
+        } else if (error.status === 409) {
+          throw new Error('El usuario ya existe');
+        } else if (error.status === 0) {
+          throw new Error('No se pudo conectar con el servidor');
         }
-      })
-    );
+      }
+      throw new Error('Error en el registro. Por favor, intente nuevamente');
+    }
+  }
+
+  async login(credentials: { email: string; password: string }): Promise<void> {
+    try {
+      const response = await this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials)
+        .pipe(
+          catchError(this.handleError)
+        )
+        .toPromise();
+
+      if (response?.token && response?.user) {
+        this.setAuthData(response);
+      } else {
+        throw new Error('Respuesta inválida del servidor');
+      }
+    } catch (error: any) {
+      console.error('Error en el login:', error);
+      if (error instanceof HttpErrorResponse) {
+        if (error.status === 401) {
+          throw new Error('Credenciales inválidas');
+        } else if (error.status === 0) {
+          throw new Error('No se pudo conectar con el servidor');
+        }
+      }
+      throw new Error('Error en el inicio de sesión. Por favor, intente nuevamente');
+    }
   }
 
   logout() {
@@ -81,23 +123,33 @@ export class AuthService {
     return this.isAuthenticatedSubject.value;
   }
 
-  async register(userData: UserData): Promise<void> {
-    try {
-      const response = await this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData).toPromise();
-      if (response) {
-        localStorage.setItem(this.tokenKey, response.token);
-        localStorage.setItem(this.userKey, JSON.stringify(response.user));
-        localStorage.setItem('isAuthenticated', 'true');
-        this.isAuthenticatedSubject.next(true);
-      }
-    } catch (error) {
-      console.error('Error en el registro:', error);
-      throw error;
-    }
-  }
-
   async googleSignIn(): Promise<void> {
     // Implementar cuando se tenga la autenticación con Google
     throw new Error('La autenticación con Google estará disponible próximamente');
+  }
+
+  private checkAuthStatus() {
+    if (!this.isLoggedIn()) {
+      this.router.navigate(['/login']);
+    }
+  }
+
+  private setAuthData(response: AuthResponse): void {
+    localStorage.setItem(this.tokenKey, response.token);
+    localStorage.setItem(this.userKey, JSON.stringify(response.user));
+    localStorage.setItem('isAuthenticated', 'true');
+    this.isAuthenticatedSubject.next(true);
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'Ha ocurrido un error desconocido';
+    if (error.error instanceof ErrorEvent) {
+      // Error del lado del cliente
+      errorMessage = error.error.message;
+    } else {
+      // Error del lado del servidor
+      errorMessage = error.error?.message || `Error ${error.status}: ${error.statusText}`;
+    }
+    return throwError(() => new Error(errorMessage));
   }
 } 

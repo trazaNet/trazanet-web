@@ -31,90 +31,96 @@
       </div>
       <span>o usa tu correo para registrarte</span>
       
-      <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="register-form">
-        <div class="form-group">
-          <label for="dicose">DICOSE</label>
-          <input 
-            type="text" 
-            id="dicose" 
-            name="dicose"
-            [(ngModel)]="dicose" 
-            required
-            pattern="[0-9]*"
-            #dicoseInput="ngModel"
-            placeholder="Ingrese su número DICOSE">
-          <div class="error-hint" *ngIf="dicoseInput.invalid && (dicoseInput.dirty || dicoseInput.touched)">
-            <small *ngIf="dicoseInput.errors?.['pattern']">Solo se permiten números</small>
-            <small *ngIf="dicoseInput.errors?.['required']">DICOSE es requerido</small>
-          </div>
-        </div>
+      <div class="register-container">
+        <div class="register-form">
+          <h2>Registro</h2>
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <div class="form-group">
+              <label for="name">Nombre</label>
+              <input
+                type="text"
+                id="name"
+                formControlName="name"
+                [ngClass]="{ 'is-invalid': submitted && f['name'].errors }"
+              />
+              <div *ngIf="submitted && f['name'].errors" class="invalid-feedback">
+                <div *ngIf="f['name'].errors['required']">El nombre es requerido</div>
+              </div>
+            </div>
 
-        <div class="form-group">
-          <label for="email">Correo electrónico</label>
-          <input 
-            type="email" 
-            id="email" 
-            name="email"
-            [(ngModel)]="email" 
-            required
-            email
-            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-            #emailInput="ngModel"
-            placeholder="Ingrese su correo electrónico">
-          <div class="error-hint" *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)">
-            <small *ngIf="emailInput.errors?.['email']">Ingrese un correo electrónico válido</small>
-            <small *ngIf="emailInput.errors?.['required']">El correo electrónico es requerido</small>
-          </div>
-        </div>
+            <div class="form-group">
+              <label for="lastName">Apellido</label>
+              <input
+                type="text"
+                id="lastName"
+                formControlName="lastName"
+                [ngClass]="{ 'is-invalid': submitted && f['lastName'].errors }"
+              />
+              <div *ngIf="submitted && f['lastName'].errors" class="invalid-feedback">
+                <div *ngIf="f['lastName'].errors['required']">El apellido es requerido</div>
+              </div>
+            </div>
 
-        <div class="form-group">
-          <label for="phone">Teléfono</label>
-          <input 
-            type="tel" 
-            id="phone" 
-            name="phone"
-            [(ngModel)]="phone" 
-            required
-            pattern="[0-9]*"
-            #phoneInput="ngModel"
-            placeholder="Ingrese su número de teléfono">
-          <div class="error-hint" *ngIf="phoneInput.invalid && (phoneInput.dirty || phoneInput.touched)">
-            <small *ngIf="phoneInput.errors?.['pattern']">Solo se permiten números</small>
-            <small *ngIf="phoneInput.errors?.['required']">El teléfono es requerido</small>
-          </div>
-        </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                formControlName="email"
+                [ngClass]="{ 'is-invalid': submitted && f['email'].errors }"
+              />
+              <div *ngIf="submitted && f['email'].errors" class="invalid-feedback">
+                <div *ngIf="f['email'].errors['required']">El email es requerido</div>
+                <div *ngIf="f['email'].errors['email']">El email no es válido</div>
+              </div>
+            </div>
 
-        <div class="form-group">
-          <label for="password">Contraseña</label>
-          <div class="password-input">
-            <input 
-              [type]="showPassword ? 'text' : 'password'"
-              id="password" 
-              name="password"
-              [(ngModel)]="password" 
-              required
-              minlength="6"
-              #passwordInput="ngModel"
-              placeholder="Elija una contraseña">
-            <button type="button" class="toggle-password" (click)="togglePassword()">
-              <i class="fas" [class.fa-eye]="!showPassword" [class.fa-eye-slash]="showPassword"></i>
+            <div class="form-group">
+              <label for="password">Contraseña</label>
+              <div class="password-input">
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  id="password"
+                  formControlName="password"
+                  [ngClass]="{ 'is-invalid': submitted && f['password'].errors }"
+                />
+                <button type="button" class="toggle-password" (click)="togglePassword()">
+                  <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                </button>
+              </div>
+              <div *ngIf="submitted && f['password'].errors" class="invalid-feedback">
+                <div *ngIf="f['password'].errors['required']">La contraseña es requerida</div>
+                <div *ngIf="f['password'].errors['minlength']">La contraseña debe tener al menos 6 caracteres</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword">Confirmar Contraseña</label>
+              <div class="password-input">
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  id="confirmPassword"
+                  formControlName="confirmPassword"
+                  [ngClass]="{ 'is-invalid': submitted && (f['confirmPassword'].errors || registerForm.hasError('mismatch')) }"
+                />
+              </div>
+              <div *ngIf="submitted && (f['confirmPassword'].errors || registerForm.hasError('mismatch'))" class="invalid-feedback">
+                <div *ngIf="f['confirmPassword'].errors?.['required']">La confirmación de contraseña es requerida</div>
+                <div *ngIf="registerForm.hasError('mismatch')">Las contraseñas no coinciden</div>
+              </div>
+            </div>
+
+            <button type="submit" [disabled]="loading" class="btn-register">
+              <span *ngIf="loading" class="spinner"></span>
+              {{ loading ? 'Registrando...' : 'Registrarse' }}
             </button>
-          </div>
-          <div class="error-hint" *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)">
-            <small *ngIf="passwordInput.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres</small>
-            <small *ngIf="passwordInput.errors?.['required']">La contraseña es requerida</small>
-          </div>
-        </div>
 
-        <button type="submit" [disabled]="!registerForm.form.valid">
-          CREAR CUENTA
-        </button>
-
-        <div class="error-message" *ngIf="errorMessage">
-          <i class="fas fa-exclamation-circle"></i>
-          {{ errorMessage }}
+            <div class="login-link">
+              ¿Ya tienes una cuenta? <a routerLink="/login">Inicia sesión</a>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 </div> 
