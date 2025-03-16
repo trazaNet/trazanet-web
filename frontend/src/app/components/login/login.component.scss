@@ -7,7 +7,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--background-primary);
+  background: #f5f7fa;
   overflow: hidden;
 }
 
@@ -17,7 +17,9 @@
 
   .container {
     background-color: #242424;
-    box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    box-shadow: 0 14px 28px rgba(0,0,0,0.25),
+                0 10px 10px rgba(0,0,0,0.22),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
   }
 
   form {
@@ -98,9 +100,11 @@
 }
 
 .container {
-  background-color: var(--background-secondary);
+  background-color: #ffffff;
   border-radius: 16px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+              0 8px 10px -6px rgba(0, 0, 0, 0.1),
+              0 16px 24px -4px rgba(46, 125, 50, 0.08);
   position: relative;
   overflow: hidden;
   width: 768px;
@@ -227,12 +231,14 @@
     animation-delay: 3.6s;
     
     p {
+      font-family: 'Lato', sans-serif;
       font-size: 0.9rem;
       font-weight: 400;
       color: rgba(255, 255, 255, 0.8);
       letter-spacing: -0.2px;
       
       strong {
+        font-family: 'Poppins', sans-serif;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.9);
         margin-right: -1px;
@@ -268,7 +274,7 @@
       }
 
       h1 {
-        font-family: 'Poppins';
+        font-family: 'Poppins', sans-serif;
         color: #ffffff;
         font-size: 3.5rem;
         animation: mainFadeIn 2s forwards;
@@ -288,7 +294,7 @@
         }
 
         .dot {
-          color: var(--light-green);
+          color: #c8e6c9;
           font-weight: 700;
           margin-left: -1px;
           position: relative;
@@ -314,9 +320,9 @@
         text-align: center;
         
         p {
+          font-family: 'Lato', sans-serif;
           position: relative;
           font-weight: 400;
-          font-family: 'Lato';
           color: #ffffff;
           font-size: 1rem;
           margin: 0.15rem 0;
@@ -384,6 +390,7 @@
     animation-delay: 3.6s;
 
     p:not(.subtitle-block p) {
+      font-family: 'Lato', sans-serif;
       font-size: 0.95rem;
       margin-bottom: 1.5rem;
       opacity: 0.85;
@@ -392,6 +399,7 @@
     }
 
     button.ghost {
+      font-family: 'Poppins', sans-serif;
       margin: 0;
       transform: translateY(20px);
       animation: buttonSlideUp 0.5s ease forwards;
@@ -426,7 +434,7 @@
 }
 
 form {
-  background-color: var(--background-secondary);
+  background-color: #ffffff;
   padding: 0 50px;
   height: 100%;
   display: flex;
@@ -436,17 +444,20 @@ form {
   text-align: center;
 
   h1 {
-    font-weight: bold;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
     margin: 0;
     color: var(--text-primary);
   }
 
   span {
+    font-family: 'Lato', sans-serif;
     font-size: 12px;
     color: var(--text-secondary);
   }
 
   input {
+    font-family: 'Lato', sans-serif;
     background-color: var(--background-tertiary);
     border: 1px solid var(--border-color);
     padding: 12px 15px;
@@ -458,6 +469,7 @@ form {
 
     &::placeholder {
       color: var(--text-secondary);
+      font-family: 'Lato', sans-serif;
     }
 
     &:focus {
@@ -467,30 +479,40 @@ form {
   }
 
   button {
+    font-family: 'Poppins', sans-serif;
     border-radius: 8px;
     background-color: var(--primary-green);
     color: #ffffff;
-    font-size: 14px;
-    font-weight: bold;
-    padding: 12px 45px;
-    letter-spacing: 1px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 12px 32px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     border: none;
     margin-top: 15px;
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.25);
 
     &:hover {
       background-color: var(--secondary-green);
       transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
     }
 
     &:active {
       transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(46, 125, 50, 0.25);
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
     }
   }
 
   a {
+    font-family: 'Lato', sans-serif;
     color: var(--text-secondary);
     font-size: 14px;
     text-decoration: none;
@@ -518,13 +540,20 @@ form {
 
   button[type="submit"] {
     background-color: var(--primary-green);
-    border-color: var(--primary-green);
     color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
     &:hover {
       background-color: var(--secondary-green);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    &:active {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.3);
     }
   }
 }
@@ -533,9 +562,25 @@ button.ghost {
   background-color: transparent;
   border: 2px solid #ffffff;
   color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 12px 32px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  cursor: pointer;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #ffffff;
+    color: var(--primary-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 }
 
