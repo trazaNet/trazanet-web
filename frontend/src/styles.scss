@@ -6,6 +6,9 @@
 /* Add Font Awesome */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
 
+/* Import ngx-toastr styles */
+@import 'ngx-toastr/toastr';
+
 /* Variables globales */
 :root {
   /* Light theme (default) */
@@ -323,5 +326,3 @@ input:checked + .slider:before {
     color: var(--text-secondary);
   }
 }
-
-@import 'ngx-toastr/toastr';
