@@ -43,9 +43,22 @@ ENV PORT=3001
 # Exponer el puerto (Railway configurará el puerto automáticamente)
 EXPOSE ${PORT}
 
-# Healthcheck para Railway usando curl
-HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:${PORT}/healthz || exit 1
+# Script para verificar el servicio y mostrar más información
+RUN echo '#!/bin/sh\n\
+echo "Checking health endpoint..."\n\
+response=$(curl -s http://localhost:${PORT}/healthz)\n\
+echo "Response from healthz: $response"\n\
+if [ "$(echo $response | grep -c "\"status\":\"ok\"")" = "1" ]; then\n\
+  echo "Health check passed"\n\
+  exit 0\n\
+else\n\
+  echo "Health check failed"\n\
+  exit 1\n\
+fi' > /healthcheck.sh && chmod +x /healthcheck.sh
 
-# Comando para iniciar el backend
-CMD ["node", "src/index.js"] 
+# Healthcheck para Railway usando el script
+HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=3 \
+    CMD /healthcheck.sh
+
+# Comando para iniciar el backend con logging adicional
+CMD echo "Starting server on port ${PORT}" && node src/index.js 
