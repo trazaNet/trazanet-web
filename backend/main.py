@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Annotated
@@ -8,6 +8,8 @@ import openai
 import logging
 from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase
+import pandas as pd
+import io
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +19,9 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 logger.info(f"MODEL_NAME: {os.getenv('MODEL_NAME')}")
 logger.info(f"API Key configurada: {'Sí' if os.getenv('OPENAI_API_KEY') else 'No'}")
+
+# Verificar el perfil de desarrollo
+DEVELOPMENT_PROFILE = os.getenv("DEVELOPMENT_PROFILE", "production")
 
 # Configuración de la base de datos
 DATABASE_URL = "postgresql+psycopg://truc0:retrucovale4@localhost/trazaNet"
@@ -71,10 +76,10 @@ app = FastAPI()
 # Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],  # URL de tu aplicación Angular
+    allow_origins=["*"],  # Permitir todos los orígenes
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Permitir todos los métodos
+    allow_headers=["*"],  # Permitir todos los encabezados
 )
 
 # Configurar OpenAI
@@ -159,6 +164,64 @@ def read_users(db: DB, skip: int = 0, limit: int = 100):
     users = db.query(User).offset(skip).limit(limit).all()
     return users
 
+class Animal(BaseModel):
+    dispositivo: str
+    nombre_propietario: str
+    edad_meses: int
+    peso_kg: float
+    raza: str
+    sexo: str
+
+@app.post("/api/excel/upload")
+async def upload_excel(file: UploadFile = File(...)):
+    try:
+        logger.info(f"Recibiendo archivo: {file.filename}")
+        
+        # Leer el archivo Excel
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        # Convertir DataFrame a lista de diccionarios
+        animales = df.to_dict('records')
+        logger.info(f"Datos procesados: {len(animales)} animales")
+        
+        return {"message": "Archivo procesado correctamente", "data": animales}
+    except Exception as e:
+        logger.error(f"Error al procesar el archivo: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/excel/data")
+async def get_excel_data():
+    try:
+        # Por ahora, devolvemos datos de ejemplo
+        return [
+            {
+                "dispositivo": "12345",
+                "nombre_propietario": "Juan Pérez",
+                "edad_meses": 24,
+                "peso_kg": 450.5,
+                "raza": "Holstein",
+                "sexo": "F"
+            }
+        ]
+    except Exception as e:
+        logger.error(f"Error al obtener datos: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.middleware("http")
+async def dev_auth_middleware(request: Request, call_next):
+    if DEVELOPMENT_PROFILE == "dev123":
+        # Omite la autenticación en el perfil de desarrollo
+        response = await call_next(request)
+        return response
+    else:
+        # Aquí puedes agregar la lógica de autenticación para otros perfiles
+        # Por ejemplo, verificar un token de autorización
+        pass
+
+# Añadir el middleware a la aplicación
+app.middleware_stack.add_middleware(dev_auth_middleware)
+
 if __name__ == "__main__":
     import uvicorn
     try:
@@ -166,7 +229,7 @@ if __name__ == "__main__":
         uvicorn.run(
             app,
             host="0.0.0.0",  # Permite conexiones desde cualquier interfaz
-            port=8000,
+            port=3001,
             log_level="info"
         )
     except Exception as e:

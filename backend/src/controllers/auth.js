@@ -8,7 +8,7 @@ const register = async (req, res) => {
   try {
     // Verificar si el usuario ya existe
     const userExists = await db.query(
-      'SELECT * FROM users WHERE email = $1 OR dicose = $2',
+      'SELECT * FROM usuarios WHERE email = $1 OR dicose = $2',
       [email, dicose]
     );
 
@@ -24,7 +24,7 @@ const register = async (req, res) => {
 
     // Crear el usuario
     const result = await db.query(
-      'INSERT INTO users (dicose, email, phone, password) VALUES ($1, $2, $3, $4) RETURNING id, dicose, email, phone',
+      'INSERT INTO usuarios (dicose, email, phone, password) VALUES ($1, $2, $3, $4) RETURNING id, dicose, email, phone',
       [dicose, email, phone, hashedPassword]
     );
 
@@ -50,10 +50,29 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
 
+  // Verificar credenciales de desarrollo
+  if (email === 'dev123' && password === 'dev123') {
+    const token = jwt.sign(
+      { id: 0 },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '1d' }
+    );
+
+    return res.json({
+      user: {
+        id: 0,
+        dicose: 'DEV',
+        email: 'dev123',
+        phone: '000000000'
+      },
+      token
+    });
+  }
+
   try {
     // Buscar usuario
     const result = await db.query(
-      'SELECT * FROM users WHERE email = $1',
+      'SELECT * FROM usuarios WHERE email = $1',
       [email]
     );
 

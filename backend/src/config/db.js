@@ -1,12 +1,14 @@
 const { Pool } = require('pg');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../../../.env') });
+require('dotenv').config();
 
 // Debug logs
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Current working directory:', process.cwd());
+console.log('Todas las variables de entorno:', Object.keys(process.env));
+console.log('DATABASE_URL:', process.env.DATABASE_URL);
 
-// Intentar obtener la URL de la base de datos de cualquiera de las variables
+// Intentar obtener la URL de la base de datos
 const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
 console.log('Database URL found:', databaseUrl ? 'Yes' : 'No');
 
@@ -15,10 +17,11 @@ if (!databaseUrl) {
 }
 
 const pool = new Pool({
-  connectionString: databaseUrl,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  user: 'postgres',
+  password: 'retrucovale4',
+  host: 'localhost',
+  port: 5432,
+  database: 'trazanet'
 });
 
 // Test de conexión

@@ -19,14 +19,20 @@ app.use('/api/auth', authRoutes);
 app.use('/api/excel', excelRoutes);
 app.use('/api/animales', animalesRoutes);
 
-// Verificar el contenido del directorio public
+// Crear directorio public si no existe
 const publicPath = path.join(__dirname, '../public');
+if (!fs.existsSync(publicPath)) {
+  console.log('Creando directorio public...');
+  fs.mkdirSync(publicPath, { recursive: true });
+}
+
+// Verificar el contenido del directorio public
 console.log('Contenido del directorio public:');
 fs.readdir(publicPath, (err, files) => {
   if (err) {
     console.error('Error al leer el directorio public:', err);
   } else {
-    console.log(files);
+    console.log(files || 'Directorio vacío');
   }
 });
 
@@ -44,7 +50,7 @@ app.get('*', (req, res) => {
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    console.error('index.html no encontrado en:', indexPath);
+    console.log('index.html no encontrado en:', indexPath);
     res.status(404).send('index.html no encontrado');
   }
 });
@@ -52,6 +58,7 @@ app.get('*', (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 // Inicializar la base de datos y luego iniciar el servidor
+console.log('Iniciando inicialización de la base de datos...');
 initializeDatabase()
   .then(() => {
     app.listen(PORT, () => {
