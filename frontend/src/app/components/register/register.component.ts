@@ -6,7 +6,6 @@ import { AuthService } from '../../services/auth.service';
 import { ThemeSwitchComponent } from '../theme-switch/theme-switch.component';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
-import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-register',
@@ -104,37 +103,13 @@ export class RegisterComponent implements OnInit {
     this.loading = true;
     const { confirmPassword, ...userData } = this.registerForm.value;
     
-    console.log('Intentando registrar usuario:', userData);
     this.authService.register(userData).subscribe({
-      next: (response) => {
-        console.log('Registro exitoso:', response);
+      next: () => {
         this.toastr.success('Registro exitoso', 'Bienvenido');
-        // La navegación ahora se maneja en el servicio de autenticación
+        // La navegación se maneja en el servicio de autenticación
       },
-      error: (error: HttpErrorResponse) => {
-        console.error('Error en el registro:', error);
-        let errorMessage = 'Error en el registro';
-        
-        if (error.status === 409) {
-          errorMessage = 'El email ya está registrado';
-        } else if (error.status === 400) {
-          if (error.error?.message?.toLowerCase().includes('email')) {
-            errorMessage = 'El formato del email no es válido';
-          } else if (error.error?.message?.toLowerCase().includes('password')) {
-            errorMessage = 'La contraseña debe tener al menos 6 caracteres';
-          } else {
-            errorMessage = 'Por favor complete todos los campos correctamente';
-          }
-        } else if (error.status === 0) {
-          errorMessage = 'No se pudo conectar con el servidor. Por favor, intente más tarde.';
-        } else if (error.error?.message) {
-          errorMessage = error.error.message;
-        }
-
-        this.toastr.error(errorMessage, 'Error de registro');
-        this.loading = false;
-      },
-      complete: () => {
+      error: (error) => {
+        this.toastr.error(error.message, 'Error');
         this.loading = false;
       }
     });
@@ -142,16 +117,12 @@ export class RegisterComponent implements OnInit {
 
   registerWithGoogle() {
     this.authService.googleSignIn().subscribe({
-      next: (response) => {
+      next: () => {
         this.toastr.success('Registro con Google exitoso', 'Bienvenido');
-        // La navegación ahora se maneja en el servicio de autenticación
+        // La navegación se maneja en el servicio de autenticación
       },
-      error: (error: HttpErrorResponse) => {
-        let errorMessage = error.message || 'Error al registrar con Google';
-        if (error.status === 409) {
-          errorMessage = 'Este correo de Google ya está registrado';
-        }
-        this.toastr.error(errorMessage, 'Error');
+      error: (error) => {
+        this.toastr.error(error.message, 'Error');
       }
     });
   }

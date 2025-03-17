@@ -70,9 +70,16 @@ export class AuthService {
             this.setAuthData(response);
           }
         }),
-        catchError(error => {
-          console.error('Error en el registro:', error);
-          throw error;
+        catchError((error: HttpErrorResponse) => {
+          let errorMessage = 'Error en el registro';
+          if (error.status === 409) {
+            errorMessage = 'El email ya está registrado';
+          } else if (error.status === 400) {
+            errorMessage = error.error?.message || 'Datos de registro inválidos';
+          } else if (error.status === 500) {
+            errorMessage = 'Error interno del servidor';
+          }
+          return throwError(() => new Error(errorMessage));
         })
       );
   }
@@ -88,12 +95,16 @@ export class AuthService {
             this.setAuthData(response);
           }
         }),
-        catchError(error => {
-          console.error('Error en el login:', error);
-          if (error.status === 500) {
-            console.error('Error interno del servidor:', error.error);
+        catchError((error: HttpErrorResponse) => {
+          let errorMessage = 'Error en el inicio de sesión';
+          if (error.status === 401) {
+            errorMessage = 'Usuario o contraseña incorrectos';
+          } else if (error.status === 404) {
+            errorMessage = 'Usuario no encontrado';
+          } else if (error.status === 500) {
+            errorMessage = 'Error interno del servidor';
           }
-          throw error;
+          return throwError(() => new Error(errorMessage));
         })
       );
   }
