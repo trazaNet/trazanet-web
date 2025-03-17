@@ -4,23 +4,11 @@ import { BehaviorSubject, Observable, from, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-
-interface UserData {
-  dicose: string;
-  email: string;
-  phone: string;
-  password: string;
-  name?: string;
-  lastName?: string;
-}
+import { User } from '../models/user.model';
+import { jwtDecode } from 'jwt-decode';
 
 interface AuthResponse {
-  user: {
-    id: number;
-    dicose: string;
-    email: string;
-    phone: string;
-  };
+  user: User;
   token: string;
 }
 
@@ -34,6 +22,8 @@ export class AuthService {
   private tokenKey = 'token';
   private userKey = 'user';
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
+  private userSubject = new BehaviorSubject<any>(null);
+  user$ = this.userSubject.asObservable();
 
   constructor(
     private router: Router,
@@ -51,7 +41,7 @@ export class AuthService {
     return this.isAuthenticatedSubject.asObservable();
   }
 
-  getCurrentUser() {
+  getCurrentUser(): User | null {
     const userData = localStorage.getItem(this.userKey);
     return userData ? JSON.parse(userData) : null;
   }
@@ -60,7 +50,7 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
-  register(userData: UserData): Observable<AuthResponse> {
+  register(userData: Omit<User, 'id' | 'role'>): Observable<AuthResponse> {
     console.log('Intentando registrar usuario:', userData);
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData)
       .pipe(
@@ -68,6 +58,7 @@ export class AuthService {
           console.log('Respuesta del registro:', response);
           if (response.token) {
             this.setAuthData(response);
+            this.router.navigate(['/login']);
           }
         }),
         catchError((error: HttpErrorResponse) => {
@@ -93,6 +84,7 @@ export class AuthService {
           console.log('Respuesta del login:', response);
           if (response.token) {
             this.setAuthData(response);
+            this.router.navigate(['/inicio']);
           }
         }),
         catchError((error: HttpErrorResponse) => {
@@ -121,6 +113,11 @@ export class AuthService {
     return this.isAuthenticatedSubject.value;
   }
 
+  isAdmin(): boolean {
+    const user = this.getCurrentUser();
+    return user?.role === 'admin';
+  }
+
   googleSignIn(): Observable<AuthResponse> {
     // Por ahora, devolvemos un Observable que emite un error
     return throwError(() => new Error('La autenticación con Google estará disponible próximamente'));
@@ -137,7 +134,6 @@ export class AuthService {
     localStorage.setItem(this.userKey, JSON.stringify(response.user));
     localStorage.setItem('isAuthenticated', 'true');
     this.isAuthenticatedSubject.next(true);
-    this.router.navigate(['/inicio']);
   }
 
   private handleError(error: HttpErrorResponse) {
@@ -150,5 +146,21 @@ export class AuthService {
       errorMessage = error.error?.message || `Error ${error.status}: ${error.statusText}`;
     }
     return throwError(() => new Error(errorMessage));
+  }
+
+  private checkToken() {
+    const token = localStorage.getItem(this.tokenKey);
+    if (token) {
+      try {
+        const decodedToken: any = jwtDecode(token);
+        if (decodedToken && decodedToken.exp * 1000 > Date.now()) {
+          this.userSubject.next(decodedToken);
+        } else {
+          this.logout();
+        }
+      } catch (error) {
+        this.logout();
+      }
+    }
   }
 } 
