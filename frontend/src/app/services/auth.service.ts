@@ -28,7 +28,9 @@ interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = '/api';
+  private apiUrl = environment.production 
+    ? 'https://trazanet-production.up.railway.app/api'
+    : environment.apiUrl;
   private tokenKey = 'token';
   private userKey = 'user';
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
@@ -38,6 +40,7 @@ export class AuthService {
     private http: HttpClient
   ) {
     this.checkAuthStatus();
+    console.log('API URL:', this.apiUrl); // Para debugging
   }
 
   private hasToken(): boolean {
@@ -76,6 +79,7 @@ export class AuthService {
 
   login(credentials: { email: string; password: string }): Observable<AuthResponse> {
     console.log('Intentando iniciar sesión:', credentials);
+    console.log('URL de login:', `${this.apiUrl}/auth/login`); // Para debugging
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials)
       .pipe(
         tap((response: AuthResponse) => {
@@ -86,6 +90,9 @@ export class AuthService {
         }),
         catchError(error => {
           console.error('Error en el login:', error);
+          if (error.status === 500) {
+            console.error('Error interno del servidor:', error.error);
+          }
           throw error;
         })
       );
