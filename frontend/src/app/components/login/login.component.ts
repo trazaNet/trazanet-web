@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth.service';
 import { ThemeSwitchComponent } from '../theme-switch/theme-switch.component';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { HttpErrorResponse } from '@angular/common/http';
+import { User } from '../../models/user.model';
 
 interface UserData {
   dicose: string;
@@ -78,36 +79,75 @@ export class LoginComponent {
     }
 
     this.loading = true;
-    console.log('Intentando iniciar sesión con:', { email: this.email });
-    this.authService.login({ 
-      email: this.email, 
-      password: this.password 
-    }).subscribe({
-      next: (response) => {
-        console.log('Respuesta del login:', response);
-        this.toastr.success('Inicio de sesión exitoso', 'Bienvenido');
-      },
-      error: (error) => {
-        console.error('Error en el login:', error);
-        let errorMessage = 'Error al iniciar sesión';
-        
-        if (error.status === 401) {
-          errorMessage = 'Email o contraseña incorrectos';
-        } else if (error.status === 404) {
-          errorMessage = 'El email ingresado no está registrado';
-        } else if (error.status === 0) {
-          errorMessage = 'No se pudo conectar con el servidor. Por favor, intente más tarde.';
-        } else if (error.error?.message) {
-          errorMessage = error.error.message;
-        }
 
-        this.toastr.error(errorMessage, 'Error de autenticación');
+    if (this.isRegistering) {
+      // Validaciones adicionales para registro
+      if (!this.dicose) {
+        this.toastr.warning('El DICOSE es requerido', 'Campo incompleto');
         this.loading = false;
-      },
-      complete: () => {
-        this.loading = false;
+        return;
       }
-    });
+      if (!this.phone) {
+        this.toastr.warning('El teléfono es requerido', 'Campo incompleto');
+        this.loading = false;
+        return;
+      }
+
+      // Registro
+      console.log('Intentando registrar usuario:', { email: this.email, dicose: this.dicose, phone: this.phone });
+      this.authService.register({
+        email: this.email,
+        password: this.password,
+        dicose: this.dicose,
+        phone: this.phone
+      }).subscribe({
+        next: (response) => {
+          console.log('Respuesta del registro:', response);
+          this.toastr.success('Registro exitoso', 'Bienvenido');
+          this.togglePanel(false); // Cambiar al panel de login
+        },
+        error: (error) => {
+          console.error('Error en el registro:', error);
+          this.toastr.error(error.message, 'Error de registro');
+          this.loading = false;
+        },
+        complete: () => {
+          this.loading = false;
+        }
+      });
+    } else {
+      // Login
+      console.log('Intentando iniciar sesión con:', { email: this.email });
+      this.authService.login({
+        email: this.email,
+        password: this.password
+      }).subscribe({
+        next: (response) => {
+          console.log('Respuesta del login:', response);
+          this.toastr.success('Inicio de sesión exitoso', 'Bienvenido');
+        },
+        error: (error) => {
+          console.error('Error en el login:', error);
+          let errorMessage = 'Error al iniciar sesión';
+          
+          if (error.status === 401) {
+            errorMessage = 'Email o contraseña incorrectos';
+          } else if (error.status === 404) {
+            errorMessage = 'El email ingresado no está registrado';
+          } else if (error.status === 0) {
+            errorMessage = 'No se pudo conectar con el servidor. Por favor, intente más tarde.';
+          } else if (error.error?.message) {
+            errorMessage = error.error.message;
+          }
+
+          this.toastr.error(errorMessage, 'Error de autenticación');
+          this.loading = false;
+        },
+        complete: () => {
+          this.loading = false;
+        }
+      });
+    }
   }
 
   private isValidEmail(email: string): boolean {

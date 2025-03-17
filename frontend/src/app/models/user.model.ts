@@ -1,9 +1,10 @@
 export interface User {
-  id: number;
+  id?: number;
   email: string;
-  name: string;
-  lastName: string;
-  role: 'admin' | 'user';
-  dicose?: string;
-  phone?: string;
+  password?: string;
+  dicose: string;
+  phone: string;
+  name?: string;
+  lastName?: string;
+  role?: string;
 } 
