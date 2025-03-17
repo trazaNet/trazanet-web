@@ -27,7 +27,7 @@ import { ThemeService } from './services/theme.service';
 export class AppComponent implements OnInit, AfterViewChecked {
   title = 'trazaNet';
   showSidebar = false;
-  isAuthPage = true;
+  isAuthPage = false;
   showingLists = false;
   showingGuias = false;
   showNewListInput = false;
@@ -56,20 +56,11 @@ export class AppComponent implements OnInit, AfterViewChecked {
     private chatService: ChatService,
     private themeService: ThemeService
   ) {
-    // Suscribirse a los cambios de ruta
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
-      // Actualizar isAuthPage basado en la ruta actual
-      this.isAuthPage = event.url === '/login' || event.url === '/' || event.url === '/register';
-      
-      // Actualizar la ruta actual para el menú
       this.currentRoute = event.url.split('/')[1] || 'inicio';
-      
-      // Si no está autenticado y no está en una página de autenticación, redirigir a login
-      if (!this.authService.isLoggedIn() && !this.isAuthPage) {
-        this.router.navigate(['/login']);
-      }
+      this.isAuthPage = ['login', 'register'].includes(this.currentRoute);
     });
 
     // Suscribirse a las listas
@@ -78,8 +69,11 @@ export class AppComponent implements OnInit, AfterViewChecked {
     });
 
     // Cargar preferencia de tema
-    this.isDarkTheme = localStorage.getItem('darkTheme') === 'true';
-    this.applyTheme();
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      this.isDarkTheme = savedTheme === 'dark';
+      this.applyTheme();
+    }
   }
 
   ngOnInit() {
@@ -89,6 +83,7 @@ export class AppComponent implements OnInit, AfterViewChecked {
 
   ngAfterViewChecked() {
     this.scrollToBottom();
+    this.applyTheme();
   }
 
   private scrollToBottom(): void {
@@ -118,13 +113,14 @@ export class AppComponent implements OnInit, AfterViewChecked {
   }
 
   navigateTo(route: string) {
-    this.router.navigate([`/${route}`]);
+    this.router.navigate([route]);
     this.showSidebar = false;
     this.showingLists = false;
   }
 
   logout() {
     this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   crearLista() {
@@ -263,11 +259,19 @@ export class AppComponent implements OnInit, AfterViewChecked {
 
   toggleTheme() {
     this.isDarkTheme = !this.isDarkTheme;
-    localStorage.setItem('darkTheme', this.isDarkTheme.toString());
-    document.body.classList.toggle('dark-theme', this.isDarkTheme);
+    localStorage.setItem('theme', this.isDarkTheme ? 'dark' : 'light');
+    this.applyTheme();
   }
 
-  private applyTheme() {
-    document.body.classList.toggle('dark-theme', this.isDarkTheme);
+  applyTheme() {
+    if (this.isDarkTheme) {
+      document.body.classList.add('dark-theme');
+    } else {
+      document.body.classList.remove('dark-theme');
+    }
+  }
+
+  isAdmin(): boolean {
+    return this.authService.isAdmin();
   }
 }
