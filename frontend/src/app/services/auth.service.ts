@@ -28,7 +28,7 @@ interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = environment.production ? '/api' : 'http://localhost:3001/api';
+  private apiUrl = '/api';
   private tokenKey = 'token';
   private userKey = 'user';
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
@@ -57,58 +57,38 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
-  async register(userData: UserData): Promise<void> {
-    try {
-      const response = await this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData)
-        .pipe(
-          catchError(this.handleError)
-        )
-        .toPromise();
-
-      if (response?.token && response?.user) {
-        this.setAuthData(response);
-      } else {
-        throw new Error('Respuesta inválida del servidor');
-      }
-    } catch (error: any) {
-      console.error('Error en el registro:', error);
-      if (error instanceof HttpErrorResponse) {
-        if (error.status === 400) {
-          throw new Error(error.error?.message || 'Error en los datos proporcionados');
-        } else if (error.status === 409) {
-          throw new Error('El usuario ya existe');
-        } else if (error.status === 0) {
-          throw new Error('No se pudo conectar con el servidor');
-        }
-      }
-      throw new Error('Error en el registro. Por favor, intente nuevamente');
-    }
+  register(userData: UserData): Observable<AuthResponse> {
+    console.log('Intentando registrar usuario:', userData);
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData)
+      .pipe(
+        tap((response: AuthResponse) => {
+          console.log('Respuesta del registro:', response);
+          if (response.token) {
+            this.setAuthData(response);
+          }
+        }),
+        catchError(error => {
+          console.error('Error en el registro:', error);
+          throw error;
+        })
+      );
   }
 
-  async login(credentials: { email: string; password: string }): Promise<void> {
-    try {
-      const response = await this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials)
-        .pipe(
-          catchError(this.handleError)
-        )
-        .toPromise();
-
-      if (response?.token && response?.user) {
-        this.setAuthData(response);
-      } else {
-        throw new Error('Respuesta inválida del servidor');
-      }
-    } catch (error: any) {
-      console.error('Error en el login:', error);
-      if (error instanceof HttpErrorResponse) {
-        if (error.status === 401) {
-          throw new Error('Credenciales inválidas');
-        } else if (error.status === 0) {
-          throw new Error('No se pudo conectar con el servidor');
-        }
-      }
-      throw new Error('Error en el inicio de sesión. Por favor, intente nuevamente');
-    }
+  login(credentials: { email: string; password: string }): Observable<AuthResponse> {
+    console.log('Intentando iniciar sesión:', credentials);
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials)
+      .pipe(
+        tap((response: AuthResponse) => {
+          console.log('Respuesta del login:', response);
+          if (response.token) {
+            this.setAuthData(response);
+          }
+        }),
+        catchError(error => {
+          console.error('Error en el login:', error);
+          throw error;
+        })
+      );
   }
 
   logout() {
@@ -129,9 +109,9 @@ export class AuthService {
   }
 
   private checkAuthStatus() {
-    if (!this.isLoggedIn()) {
-      this.router.navigate(['/login']);
-    }
+    const token = this.getToken();
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    this.isAuthenticatedSubject.next(!!token && isAuthenticated);
   }
 
   private setAuthData(response: AuthResponse): void {
