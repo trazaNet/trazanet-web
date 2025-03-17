@@ -16,7 +16,7 @@
         </div>
       </div>
       <p>¿Ya tienes una cuenta? Inicia sesión para continuar.</p>
-      <button class="ghost" (click)="togglePanel(false)">INICIAR SESIÓN</button>
+      <button class="ghost" (click)="goToLogin()">INICIAR SESIÓN</button>
     </div>
   </div>
 
@@ -33,7 +33,6 @@
       
       <div class="register-container">
         <div class="register-form">
-          <h2>Registro</h2>
           <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
             <div class="form-group">
               <label for="name">Nombre</label>
@@ -116,7 +115,7 @@
             </button>
 
             <div class="login-link">
-              ¿Ya tienes una cuenta? <a routerLink="/login">Inicia sesión</a>
+              ¿Ya tienes una cuenta? <a (click)="goToLogin()">Inicia sesión</a>
             </div>
           </form>
         </div>

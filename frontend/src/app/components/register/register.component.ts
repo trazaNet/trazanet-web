@@ -4,7 +4,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeSwitchComponent } from '../theme-switch/theme-switch.component';
-import { AuthAnimationService } from '../../services/auth-animation.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -24,12 +23,7 @@ import { HttpErrorResponse } from '@angular/common/http';
   styleUrls: ['./register.component.scss']
 })
 export class RegisterComponent implements OnInit {
-  dicose: string = '';
-  email: string = '';
-  phone: string = '';
-  password: string = '';
   showPassword: boolean = false;
-  errorMessage: string = '';
   registerForm: FormGroup;
   loading = false;
   submitted = false;
@@ -37,10 +31,14 @@ export class RegisterComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private authAnimationService: AuthAnimationService,
     private formBuilder: FormBuilder,
     private toastr: ToastrService
   ) {
+    // Si ya está autenticado, redirigir a inicio
+    if (this.authService.isLoggedIn()) {
+      this.router.navigate(['/inicio']);
+    }
+
     this.registerForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -65,30 +63,39 @@ export class RegisterComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
-  togglePanel(isSignUp: boolean) {
-    if (!isSignUp) {
-      this.router.navigate(['/login']);
-    }
-  }
-
   onSubmit() {
     this.submitted = true;
 
     if (this.registerForm.invalid) {
+      if (this.f['name'].errors?.['required']) {
+        this.toastr.warning('El nombre es requerido', 'Campo incompleto');
+        return;
+      }
+
+      if (this.f['lastName'].errors?.['required']) {
+        this.toastr.warning('El apellido es requerido', 'Campo incompleto');
+        return;
+      }
+
       if (this.f['email'].errors?.['required']) {
-        this.toastr.warning('El email es requerido', 'Campo requerido');
+        this.toastr.warning('El email es requerido', 'Campo incompleto');
+        return;
       } else if (this.f['email'].errors?.['email']) {
-        this.toastr.warning('El email no es válido', 'Formato inválido');
+        this.toastr.warning('El formato del email no es válido', 'Email inválido');
+        return;
       }
       
       if (this.f['password'].errors?.['required']) {
-        this.toastr.warning('La contraseña es requerida', 'Campo requerido');
+        this.toastr.warning('La contraseña es requerida', 'Campo incompleto');
+        return;
       } else if (this.f['password'].errors?.['minlength']) {
         this.toastr.warning('La contraseña debe tener al menos 6 caracteres', 'Contraseña muy corta');
+        return;
       }
 
       if (this.registerForm.errors?.['mismatch']) {
         this.toastr.warning('Las contraseñas no coinciden', 'Error de validación');
+        return;
       }
 
       return;
@@ -97,7 +104,7 @@ export class RegisterComponent implements OnInit {
     this.loading = true;
     const { confirmPassword, ...userData } = this.registerForm.value;
     
-    console.log('Intentando registrar con:', userData);
+    console.log('Intentando registrar usuario:', userData);
     this.authService.register(userData).subscribe({
       next: (response) => {
         console.log('Registro exitoso:', response);
@@ -111,14 +118,20 @@ export class RegisterComponent implements OnInit {
         if (error.status === 409) {
           errorMessage = 'El email ya está registrado';
         } else if (error.status === 400) {
-          errorMessage = 'Datos de registro inválidos';
+          if (error.error?.message?.toLowerCase().includes('email')) {
+            errorMessage = 'El formato del email no es válido';
+          } else if (error.error?.message?.toLowerCase().includes('password')) {
+            errorMessage = 'La contraseña debe tener al menos 6 caracteres';
+          } else {
+            errorMessage = 'Por favor complete todos los campos correctamente';
+          }
         } else if (error.status === 0) {
-          errorMessage = 'No se pudo conectar con el servidor';
+          errorMessage = 'No se pudo conectar con el servidor. Por favor, intente más tarde.';
         } else if (error.error?.message) {
           errorMessage = error.error.message;
         }
 
-        this.toastr.error(errorMessage, 'Error');
+        this.toastr.error(errorMessage, 'Error de registro');
         this.loading = false;
       },
       complete: () => {
@@ -141,5 +154,9 @@ export class RegisterComponent implements OnInit {
         this.toastr.error(errorMessage, 'Error');
       }
     });
+  }
+
+  goToLogin() {
+    this.router.navigate(['/login']);
   }
 } 
