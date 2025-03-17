@@ -79,26 +79,20 @@ export class LoginComponent {
 
     this.loading = true;
     console.log('Intentando iniciar sesión con:', { email: this.email });
-    this.authService.login({ email: this.email, password: this.password }).subscribe({
+    this.authService.login({ 
+      email: this.email, 
+      password: this.password 
+    }).subscribe({
       next: (response) => {
         console.log('Respuesta del login:', response);
         this.toastr.success('Inicio de sesión exitoso', 'Bienvenido');
-        // La navegación ahora se maneja en el servicio de autenticación
       },
-      error: (error: HttpErrorResponse) => {
+      error: (error) => {
         console.error('Error en el login:', error);
         let errorMessage = 'Error al iniciar sesión';
         
         if (error.status === 401) {
-          // Verificar si el error es específico del email o la contraseña
-          if (error.error?.message?.toLowerCase().includes('email')) {
-            errorMessage = 'El email ingresado no está registrado';
-          } else if (error.error?.message?.toLowerCase().includes('password') || 
-                    error.error?.message?.toLowerCase().includes('contraseña')) {
-            errorMessage = 'La contraseña ingresada es incorrecta';
-          } else {
-            errorMessage = 'Email o contraseña incorrectos';
-          }
+          errorMessage = 'Email o contraseña incorrectos';
         } else if (error.status === 404) {
           errorMessage = 'El email ingresado no está registrado';
         } else if (error.status === 0) {
