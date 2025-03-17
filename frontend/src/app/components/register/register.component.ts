@@ -65,6 +65,12 @@ export class RegisterComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
+  togglePanel(isSignUp: boolean) {
+    if (!isSignUp) {
+      this.router.navigate(['/login']);
+    }
+  }
+
   onSubmit() {
     this.submitted = true;
 
@@ -91,8 +97,10 @@ export class RegisterComponent implements OnInit {
     this.loading = true;
     const { confirmPassword, ...userData } = this.registerForm.value;
     
+    console.log('Intentando registrar con:', userData);
     this.authService.register(userData).subscribe({
       next: (response) => {
+        console.log('Registro exitoso:', response);
         this.toastr.success('Registro exitoso', 'Bienvenido');
         // La navegación ahora se maneja en el servicio de autenticación
       },
@@ -133,9 +141,5 @@ export class RegisterComponent implements OnInit {
         this.toastr.error(errorMessage, 'Error');
       }
     });
-  }
-
-  togglePanel(isSignUp: boolean) {
-    this.authAnimationService.togglePanel(isSignUp);
   }
 } 
