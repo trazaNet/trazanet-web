@@ -7,6 +7,7 @@ import { ThemeSwitchComponent } from '../theme-switch/theme-switch.component';
 import { AuthAnimationService } from '../../services/auth-animation.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-register',
@@ -68,6 +69,22 @@ export class RegisterComponent implements OnInit {
     this.submitted = true;
 
     if (this.registerForm.invalid) {
+      if (this.f['email'].errors?.['required']) {
+        this.toastr.warning('El email es requerido', 'Campo requerido');
+      } else if (this.f['email'].errors?.['email']) {
+        this.toastr.warning('El email no es válido', 'Formato inválido');
+      }
+      
+      if (this.f['password'].errors?.['required']) {
+        this.toastr.warning('La contraseña es requerida', 'Campo requerido');
+      } else if (this.f['password'].errors?.['minlength']) {
+        this.toastr.warning('La contraseña debe tener al menos 6 caracteres', 'Contraseña muy corta');
+      }
+
+      if (this.registerForm.errors?.['mismatch']) {
+        this.toastr.warning('Las contraseñas no coinciden', 'Error de validación');
+      }
+
       return;
     }
 
@@ -75,13 +92,25 @@ export class RegisterComponent implements OnInit {
     const { confirmPassword, ...userData } = this.registerForm.value;
     
     this.authService.register(userData).subscribe({
-      next: () => {
+      next: (response) => {
         this.toastr.success('Registro exitoso', 'Bienvenido');
-        this.router.navigate(['/inicio']);
+        // La navegación ahora se maneja en el servicio de autenticación
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error en el registro:', error);
-        this.toastr.error(error.message || 'Error en el registro', 'Error');
+        let errorMessage = 'Error en el registro';
+        
+        if (error.status === 409) {
+          errorMessage = 'El email ya está registrado';
+        } else if (error.status === 400) {
+          errorMessage = 'Datos de registro inválidos';
+        } else if (error.status === 0) {
+          errorMessage = 'No se pudo conectar con el servidor';
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+
+        this.toastr.error(errorMessage, 'Error');
         this.loading = false;
       },
       complete: () => {
@@ -92,11 +121,16 @@ export class RegisterComponent implements OnInit {
 
   registerWithGoogle() {
     this.authService.googleSignIn().subscribe({
-      next: () => {
-        this.router.navigate(['/inicio']);
+      next: (response) => {
+        this.toastr.success('Registro con Google exitoso', 'Bienvenido');
+        // La navegación ahora se maneja en el servicio de autenticación
       },
-      error: (error) => {
-        this.errorMessage = error.message || 'Error al registrar con Google';
+      error: (error: HttpErrorResponse) => {
+        let errorMessage = error.message || 'Error al registrar con Google';
+        if (error.status === 409) {
+          errorMessage = 'Este correo de Google ya está registrado';
+        }
+        this.toastr.error(errorMessage, 'Error');
       }
     });
   }

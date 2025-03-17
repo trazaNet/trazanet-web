@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeSwitchComponent } from '../theme-switch/theme-switch.component';
+import { ToastrModule, ToastrService } from 'ngx-toastr';
+import { HttpErrorResponse } from '@angular/common/http';
 
 interface UserData {
   dicose: string;
@@ -15,7 +17,7 @@ interface UserData {
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, ThemeSwitchComponent],
+  imports: [CommonModule, FormsModule, ThemeSwitchComponent, ToastrModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
@@ -27,10 +29,12 @@ export class LoginComponent {
   isRegistering: boolean = false;
   errorMessage = '';
   showPassword: boolean = false;
+  loading = false;
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private toastr: ToastrService
   ) {
     // Si ya está autenticado, redirigir a inicio
     if (this.authService.isLoggedIn()) {
@@ -52,17 +56,38 @@ export class LoginComponent {
     this.showPassword = !this.showPassword;
   }
 
-  async onSubmit() {
+  onSubmit() {
     if (!this.email || !this.password) {
-      this.errorMessage = 'Por favor complete todos los campos';
+      this.toastr.warning('Por favor complete todos los campos', 'Campos requeridos');
       return;
     }
 
-    try {
-      await this.authService.login({ email: this.email, password: this.password });
-      this.router.navigate(['/dashboard']);
-    } catch (error: any) {
-      this.errorMessage = error.message || 'Error al iniciar sesión';
-    }
+    this.loading = true;
+    this.authService.login({ email: this.email, password: this.password }).subscribe({
+      next: (response) => {
+        this.toastr.success('Inicio de sesión exitoso', 'Bienvenido');
+        // La navegación ahora se maneja en el servicio de autenticación
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Error en el login:', error);
+        let errorMessage = 'Error al iniciar sesión';
+        
+        if (error.status === 401) {
+          errorMessage = 'Email o contraseña incorrectos';
+        } else if (error.status === 404) {
+          errorMessage = 'Usuario no encontrado';
+        } else if (error.status === 0) {
+          errorMessage = 'No se pudo conectar con el servidor';
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+
+        this.toastr.error(errorMessage, 'Error');
+        this.loading = false;
+      },
+      complete: () => {
+        this.loading = false;
+      }
+    });
   }
 } 
