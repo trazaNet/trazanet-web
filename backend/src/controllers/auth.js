@@ -4,10 +4,13 @@ const db = require('../config/db');
 
 const register = async (req, res) => {
   const { dicose, email, phone, password, name, lastName } = req.body;
+  let client;
 
   try {
+    client = await db.getClient();
+
     // Verificar si el usuario ya existe
-    const userExists = await db.query(
+    const userExists = await client.query(
       'SELECT * FROM users WHERE email = $1 OR dicose = $2',
       [email, dicose]
     );
@@ -23,7 +26,7 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Crear el usuario
-    const result = await db.query(
+    const result = await client.query(
       'INSERT INTO users (dicose, email, phone, password, name, last_name, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, dicose, email, phone, name, last_name, role',
       [dicose, email, phone, hashedPassword, name, lastName, 'user']
     );
@@ -40,39 +43,50 @@ const register = async (req, res) => {
       token
     });
   } catch (error) {
-    console.error('Error en el registro:', error);
-    res.status(500).json({
-      message: 'Error en el servidor'
+    console.error('Error en el registro:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      constraint: error.constraint
     });
+    
+    if (error.constraint === 'users_email_key') {
+      return res.status(409).json({
+        message: 'El email ya está registrado'
+      });
+    }
+    
+    if (error.constraint === 'users_dicose_key') {
+      return res.status(409).json({
+        message: 'El DICOSE ya está registrado'
+      });
+    }
+
+    res.status(500).json({
+      message: 'Error en el servidor',
+      detail: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 };
 
 const login = async (req, res) => {
   console.log('=== INICIO DEL PROCESO DE LOGIN ===');
-  console.log('Ambiente:', process.env.NODE_ENV);
-  console.log('Database URL:', process.env.DATABASE_URL);
-  
   const { email, password } = req.body;
-  console.log('Email recibido:', email);
+  let client;
 
   try {
-    console.log('Intentando conectar a la base de datos...');
-    // Verificar conexión a la base de datos
-    await db.query('SELECT NOW()');
-    console.log('Conexión a la base de datos exitosa');
-
-    console.log('Buscando usuario...');
-    // Buscar usuario
-    const result = await db.query(
+    console.log('Intentando obtener cliente de la base de datos...');
+    client = await db.getClient();
+    
+    console.log('Buscando usuario con email:', email);
+    const result = await client.query(
       'SELECT id, email, password, name, last_name, role, dicose, phone FROM users WHERE email = $1',
       [email]
     );
-
-    console.log('Resultado de la búsqueda:', {
-      encontrado: result.rows.length > 0,
-      campos: result.rows.length > 0 ? Object.keys(result.rows[0]) : [],
-      tienePassword: result.rows.length > 0 ? !!result.rows[0].password : false
-    });
 
     if (result.rows.length === 0) {
       console.log('Usuario no encontrado');
@@ -82,9 +96,8 @@ const login = async (req, res) => {
     }
 
     const user = result.rows[0];
+    console.log('Usuario encontrado:', { id: user.id, email: user.email });
 
-    console.log('Verificando contraseña...');
-    // Verificar que la contraseña existe
     if (!user.password) {
       console.error('El usuario no tiene contraseña almacenada');
       return res.status(500).json({
@@ -92,68 +105,62 @@ const login = async (req, res) => {
       });
     }
 
-    // Verificar contraseña
-    try {
-      const validPassword = await bcrypt.compare(password, user.password);
-      console.log('Resultado de verificación de contraseña:', validPassword);
-      
-      if (!validPassword) {
-        return res.status(401).json({
-          message: 'Credenciales inválidas'
-        });
-      }
-    } catch (bcryptError) {
-      console.error('Error al verificar contraseña:', bcryptError);
-      return res.status(500).json({
-        message: 'Error al verificar credenciales'
+    console.log('Verificando contraseña...');
+    const validPassword = await bcrypt.compare(password, user.password);
+    
+    if (!validPassword) {
+      console.log('Contraseña inválida');
+      return res.status(401).json({
+        message: 'Credenciales inválidas'
       });
     }
 
-    console.log('Generando token JWT...');
-    // Generar token incluyendo el rol del usuario
+    console.log('Contraseña válida, generando token...');
     const token = jwt.sign(
       { 
         id: user.id,
-        role: user.role || 'user' // Valor por defecto si role es null
+        role: user.role || 'user'
       },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '1d' }
     );
 
-    // Enviar respuesta sin incluir el hash de la contraseña
     const { password: _, ...userWithoutPassword } = user;
     
-    console.log('Enviando respuesta exitosa');
+    console.log('Login exitoso para el usuario:', email);
     res.json({
       user: {
         ...userWithoutPassword,
-        lastName: user.last_name // Mapear last_name a lastName para el frontend
+        lastName: user.last_name
       },
       token
     });
   } catch (error) {
-    console.error('=== ERROR EN EL PROCESO DE LOGIN ===');
-    console.error('Tipo de error:', error.constructor.name);
-    console.error('Mensaje:', error.message);
-    console.error('Stack:', error.stack);
-    console.error('Código:', error.code);
-    console.error('Detalles:', error.detail);
-    console.error('Consulta:', error.query);
-    console.error('Parámetros:', error.parameters);
-    console.error('Restricción:', error.constraint);
-    console.error('Tabla:', error.table);
-    console.error('Columna:', error.column);
-    console.error('Esquema:', error.schema);
-    console.error('================================');
+    console.error('Error en el proceso de login:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint,
+      position: error.position,
+      where: error.where,
+      schema: error.schema,
+      table: error.table,
+      column: error.column,
+      dataType: error.dataType,
+      constraint: error.constraint
+    });
 
     res.status(500).json({
       message: 'Error en el servidor',
       detail: process.env.NODE_ENV === 'development' ? {
         message: error.message,
-        code: error.code,
-        detail: error.detail
+        code: error.code
       } : undefined
     });
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 };
 
