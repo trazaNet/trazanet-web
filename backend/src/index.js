@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 const excelRoutes = require('./routes/excel.routes');
 const animalesRoutes = require('./routes/animales.routes');
 const initializeDatabase = require('./db/init');
@@ -42,6 +43,7 @@ app.use('/api', (req, res, next) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/excel', excelRoutes);
 app.use('/api/animales', animalesRoutes);
 
