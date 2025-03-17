@@ -75,6 +75,9 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   console.log('=== INICIO DEL PROCESO DE LOGIN ===');
+  console.log('Headers recibidos:', req.headers);
+  console.log('Cuerpo de la solicitud:', req.body);
+  
   const { email, password } = req.body;
   let client;
 
