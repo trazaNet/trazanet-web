@@ -16,9 +16,7 @@ interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = environment.production 
-    ? 'https://trazanet-production.up.railway.app/api'
-    : environment.apiUrl;
+  private apiUrl = environment.apiUrl;
   private tokenKey = 'token';
   private userKey = 'user';
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
