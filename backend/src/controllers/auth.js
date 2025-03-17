@@ -48,30 +48,34 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  console.log('Iniciando proceso de login');
+  console.log('=== INICIO DEL PROCESO DE LOGIN ===');
+  console.log('Ambiente:', process.env.NODE_ENV);
+  console.log('Database URL:', process.env.DATABASE_URL);
+  
   const { email, password } = req.body;
-  console.log('Datos recibidos:', { email, password: '***' });
+  console.log('Email recibido:', email);
 
   try {
-    console.log('Buscando usuario en la base de datos...');
+    console.log('Intentando conectar a la base de datos...');
+    // Verificar conexión a la base de datos
+    await db.query('SELECT NOW()');
+    console.log('Conexión a la base de datos exitosa');
+
+    console.log('Buscando usuario...');
     // Buscar usuario
     const result = await db.query(
       'SELECT id, email, password, name, last_name, role, dicose, phone FROM users WHERE email = $1',
       [email]
     );
-    console.log('Resultado de la búsqueda:', { 
-      found: result.rows.length > 0,
-      userData: result.rows.length > 0 ? {
-        id: result.rows[0].id,
-        email: result.rows[0].email,
-        hasPassword: !!result.rows[0].password,
-        name: result.rows[0].name,
-        last_name: result.rows[0].last_name,
-        role: result.rows[0].role
-      } : null
+
+    console.log('Resultado de la búsqueda:', {
+      encontrado: result.rows.length > 0,
+      campos: result.rows.length > 0 ? Object.keys(result.rows[0]) : [],
+      tienePassword: result.rows.length > 0 ? !!result.rows[0].password : false
     });
 
     if (result.rows.length === 0) {
+      console.log('Usuario no encontrado');
       return res.status(404).json({
         message: 'Usuario no encontrado'
       });
@@ -80,13 +84,28 @@ const login = async (req, res) => {
     const user = result.rows[0];
 
     console.log('Verificando contraseña...');
+    // Verificar que la contraseña existe
+    if (!user.password) {
+      console.error('El usuario no tiene contraseña almacenada');
+      return res.status(500).json({
+        message: 'Error en la configuración del usuario'
+      });
+    }
+
     // Verificar contraseña
-    const validPassword = await bcrypt.compare(password, user.password);
-    console.log('Resultado de verificación de contraseña:', validPassword);
-    
-    if (!validPassword) {
-      return res.status(401).json({
-        message: 'Credenciales inválidas'
+    try {
+      const validPassword = await bcrypt.compare(password, user.password);
+      console.log('Resultado de verificación de contraseña:', validPassword);
+      
+      if (!validPassword) {
+        return res.status(401).json({
+          message: 'Credenciales inválidas'
+        });
+      }
+    } catch (bcryptError) {
+      console.error('Error al verificar contraseña:', bcryptError);
+      return res.status(500).json({
+        message: 'Error al verificar credenciales'
       });
     }
 
@@ -113,15 +132,27 @@ const login = async (req, res) => {
       token
     });
   } catch (error) {
-    console.error('Error detallado en el login:', {
-      message: error.message,
-      stack: error.stack,
-      code: error.code,
-      detail: error.detail
-    });
+    console.error('=== ERROR EN EL PROCESO DE LOGIN ===');
+    console.error('Tipo de error:', error.constructor.name);
+    console.error('Mensaje:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('Código:', error.code);
+    console.error('Detalles:', error.detail);
+    console.error('Consulta:', error.query);
+    console.error('Parámetros:', error.parameters);
+    console.error('Restricción:', error.constraint);
+    console.error('Tabla:', error.table);
+    console.error('Columna:', error.column);
+    console.error('Esquema:', error.schema);
+    console.error('================================');
+
     res.status(500).json({
       message: 'Error en el servidor',
-      detail: process.env.NODE_ENV === 'development' ? error.message : undefined
+      detail: process.env.NODE_ENV === 'development' ? {
+        message: error.message,
+        code: error.code,
+        detail: error.detail
+      } : undefined
     });
   }
 };
