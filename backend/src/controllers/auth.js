@@ -48,14 +48,28 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
+  console.log('Iniciando proceso de login');
   const { email, password } = req.body;
+  console.log('Datos recibidos:', { email, password: '***' });
 
   try {
+    console.log('Buscando usuario en la base de datos...');
     // Buscar usuario
     const result = await db.query(
       'SELECT id, email, password, name, last_name, role, dicose, phone FROM users WHERE email = $1',
       [email]
     );
+    console.log('Resultado de la búsqueda:', { 
+      found: result.rows.length > 0,
+      userData: result.rows.length > 0 ? {
+        id: result.rows[0].id,
+        email: result.rows[0].email,
+        hasPassword: !!result.rows[0].password,
+        name: result.rows[0].name,
+        last_name: result.rows[0].last_name,
+        role: result.rows[0].role
+      } : null
+    });
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -65,14 +79,18 @@ const login = async (req, res) => {
 
     const user = result.rows[0];
 
+    console.log('Verificando contraseña...');
     // Verificar contraseña
     const validPassword = await bcrypt.compare(password, user.password);
+    console.log('Resultado de verificación de contraseña:', validPassword);
+    
     if (!validPassword) {
       return res.status(401).json({
         message: 'Credenciales inválidas'
       });
     }
 
+    console.log('Generando token JWT...');
     // Generar token incluyendo el rol del usuario
     const token = jwt.sign(
       { 
@@ -86,6 +104,7 @@ const login = async (req, res) => {
     // Enviar respuesta sin incluir el hash de la contraseña
     const { password: _, ...userWithoutPassword } = user;
     
+    console.log('Enviando respuesta exitosa');
     res.json({
       user: {
         ...userWithoutPassword,
@@ -94,9 +113,15 @@ const login = async (req, res) => {
       token
     });
   } catch (error) {
-    console.error('Error en el login:', error);
+    console.error('Error detallado en el login:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      detail: error.detail
+    });
     res.status(500).json({
-      message: 'Error en el servidor'
+      message: 'Error en el servidor',
+      detail: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
