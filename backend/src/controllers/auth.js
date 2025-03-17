@@ -30,7 +30,7 @@ const register = async (req, res) => {
 
     // Generar token JWT
     const token = jwt.sign(
-      { id: result.rows[0].id },
+      { id: result.rows[0].id, role: result.rows[0].role },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '1d' }
     );
@@ -50,29 +50,10 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
 
-  // Verificar credenciales de desarrollo
-  if (email === 'dev123' && password === 'dev123') {
-    const token = jwt.sign(
-      { id: 0 },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '1d' }
-    );
-
-    return res.json({
-      user: {
-        id: 0,
-        dicose: 'DEV',
-        email: 'dev123',
-        phone: '000000000'
-      },
-      token
-    });
-  }
-
   try {
     // Buscar usuario
     const result = await db.query(
-      'SELECT * FROM users WHERE email = $1',
+      'SELECT id, email, password, name, last_name, role, dicose, phone FROM users WHERE email = $1',
       [email]
     );
 
@@ -92,22 +73,23 @@ const login = async (req, res) => {
       });
     }
 
-    // Generar token
+    // Generar token incluyendo el rol del usuario
     const token = jwt.sign(
-      { id: user.id },
+      { 
+        id: user.id,
+        role: user.role || 'user' // Valor por defecto si role es null
+      },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '1d' }
     );
 
+    // Enviar respuesta sin incluir el hash de la contraseña
+    const { password: _, ...userWithoutPassword } = user;
+    
     res.json({
       user: {
-        id: user.id,
-        dicose: user.dicose,
-        email: user.email,
-        phone: user.phone,
-        name: user.name,
-        lastName: user.last_name,
-        role: user.role
+        ...userWithoutPassword,
+        lastName: user.last_name // Mapear last_name a lastName para el frontend
       },
       token
     });
