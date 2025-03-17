@@ -103,9 +103,9 @@ export class AuthService {
     return this.isAuthenticatedSubject.value;
   }
 
-  async googleSignIn(): Promise<void> {
-    // Implementar cuando se tenga la autenticación con Google
-    throw new Error('La autenticación con Google estará disponible próximamente');
+  googleSignIn(): Observable<AuthResponse> {
+    // Por ahora, devolvemos un Observable que emite un error
+    return throwError(() => new Error('La autenticación con Google estará disponible próximamente'));
   }
 
   private checkAuthStatus() {
@@ -119,6 +119,7 @@ export class AuthService {
     localStorage.setItem(this.userKey, JSON.stringify(response.user));
     localStorage.setItem('isAuthenticated', 'true');
     this.isAuthenticatedSubject.next(true);
+    this.router.navigate(['/inicio']);
   }
 
   private handleError(error: HttpErrorResponse) {

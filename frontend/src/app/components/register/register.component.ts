@@ -64,35 +64,41 @@ export class RegisterComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
-  async onSubmit() {
+  onSubmit() {
     this.submitted = true;
 
     if (this.registerForm.invalid) {
       return;
     }
 
-    try {
-      this.loading = true;
-      const { confirmPassword, ...userData } = this.registerForm.value;
-      
-      await this.authService.register(userData);
-      this.toastr.success('Registro exitoso', 'Bienvenido');
-      this.router.navigate(['/dashboard']);
-    } catch (error: any) {
-      console.error('Error en el registro:', error);
-      this.toastr.error(error.message || 'Error en el registro', 'Error');
-    } finally {
-      this.loading = false;
-    }
+    this.loading = true;
+    const { confirmPassword, ...userData } = this.registerForm.value;
+    
+    this.authService.register(userData).subscribe({
+      next: () => {
+        this.toastr.success('Registro exitoso', 'Bienvenido');
+        this.router.navigate(['/inicio']);
+      },
+      error: (error) => {
+        console.error('Error en el registro:', error);
+        this.toastr.error(error.message || 'Error en el registro', 'Error');
+        this.loading = false;
+      },
+      complete: () => {
+        this.loading = false;
+      }
+    });
   }
 
-  async registerWithGoogle() {
-    try {
-      await this.authService.googleSignIn();
-      this.router.navigate(['/dashboard']);
-    } catch (error: any) {
-      this.errorMessage = error.message || 'Error al registrar con Google';
-    }
+  registerWithGoogle() {
+    this.authService.googleSignIn().subscribe({
+      next: () => {
+        this.router.navigate(['/inicio']);
+      },
+      error: (error) => {
+        this.errorMessage = error.message || 'Error al registrar con Google';
+      }
+    });
   }
 
   togglePanel(isSignUp: boolean) {
