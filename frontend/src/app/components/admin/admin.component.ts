@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AdminService } from '../../services/admin.service';
 import { ToastrService } from 'ngx-toastr';
 import { User } from '../../models/user.model';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-admin',
@@ -58,23 +59,28 @@ export class AdminComponent implements OnInit {
 
   loadUsers(): void {
     this.adminService.getUsers().subscribe({
-      next: (users) => {
+      next: (users: User[]) => {
         this.users = users;
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         this.toastr.error('Error al cargar usuarios', 'Error');
       }
     });
   }
 
-  deleteUser(userId: number): void {
+  deleteUser(userId: number | undefined): void {
+    if (!userId) {
+      this.toastr.error('ID de usuario no válido', 'Error');
+      return;
+    }
+
     if (confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
       this.adminService.deleteUser(userId).subscribe({
         next: () => {
           this.toastr.success('Usuario eliminado correctamente');
           this.loadUsers();
         },
-        error: (error) => {
+        error: (error: HttpErrorResponse) => {
           this.toastr.error('Error al eliminar usuario', 'Error');
         }
       });

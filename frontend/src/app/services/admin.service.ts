@@ -22,7 +22,7 @@ export class AdminService {
     return this.http.delete<void>(`${this.apiUrl}/admin/users/${userId}`);
   }
 
-  makeAdmin(userId: number): Observable<User> {
-    return this.http.patch<User>(`${this.apiUrl}/admin/users/${userId}/role`, { role: 'admin' });
+  updateUserRole(userId: number, role: string): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/admin/users/${userId}/role`, { role });
   }
 } 
