@@ -13,10 +13,15 @@ const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
 console.log('Database URL found:', databaseUrl ? 'Yes' : 'No');
 
 if (!databaseUrl) {
-  throw new Error('No se encontró la URL de la base de datos. Asegúrate de que DATABASE_URL o DATABASE_PUBLIC_URL esté configurada.');
+  console.error('No se encontró la URL de la base de datos. Se usará la configuración local.');
 }
 
-const pool = new Pool({
+const pool = new Pool(databaseUrl ? {
+  connectionString: databaseUrl,
+  ssl: {
+    rejectUnauthorized: false
+  }
+} : {
   user: 'postgres',
   password: 'retrucovale4',
   host: 'localhost',
