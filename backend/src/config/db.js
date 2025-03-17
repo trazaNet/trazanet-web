@@ -59,12 +59,15 @@ const initializeDatabase = async () => {
     
     // Crear tabla de usuarios si no existe
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS usuarios (
+      CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         dicose VARCHAR(50) UNIQUE NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
         phone VARCHAR(20),
         password VARCHAR(255) NOT NULL,
+        name VARCHAR(100),
+        last_name VARCHAR(100),
+        role VARCHAR(20) DEFAULT 'user',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
