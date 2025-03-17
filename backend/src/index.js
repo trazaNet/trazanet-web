@@ -35,7 +35,12 @@ app.get('/_health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-// Routes API
+// Routes API - Manejar todas las rutas de la API primero
+app.use('/api', (req, res, next) => {
+  console.log('API request received:', req.method, req.url);
+  next();
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/excel', excelRoutes);
 app.use('/api/animales', animalesRoutes);
@@ -62,6 +67,12 @@ app.use(express.static(publicPath, {
   index: false, // Deshabilitar el servido automático de index.html
   maxAge: '1h' // Cache-Control para archivos estáticos
 }));
+
+// Manejar rutas de la API no encontradas
+app.all('/api/*', (req, res) => {
+  console.log('API route not found:', req.method, req.url);
+  res.status(404).json({ message: 'API endpoint not found' });
+});
 
 // Manejar todas las demás rutas para Angular
 app.get('*', (req, res) => {
