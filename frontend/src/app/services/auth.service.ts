@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, from, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, from, throwError, of } from 'rxjs';
+import { tap, catchError, map } from 'rxjs/operators';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { User } from '../models/user.model';
@@ -16,9 +16,7 @@ interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = environment.production 
-    ? 'https://trazanet-production.up.railway.app/api'
-    : environment.apiUrl;
+  private apiUrl = environment.apiUrl;
   private tokenKey = 'token';
   private userKey = 'user';
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
@@ -52,8 +50,18 @@ export class AuthService {
 
   register(userData: Omit<User, 'id' | 'role'>): Observable<AuthResponse> {
     console.log('Intentando registrar usuario:', userData);
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData)
+    
+    // Usar el endpoint de users para registro
+    return this.http.post<User>(`${this.apiUrl}/users/`, userData)
       .pipe(
+        map(user => {
+          // Generar un token temporal
+          const tempToken = btoa(user.email + ':' + Date.now());
+          return {
+            user,
+            token: tempToken
+          };
+        }),
         tap((response: AuthResponse) => {
           console.log('Respuesta del registro:', response);
           if (response.token) {
@@ -77,9 +85,33 @@ export class AuthService {
 
   login(credentials: { email: string; password: string }): Observable<AuthResponse> {
     console.log('Intentando iniciar sesión:', credentials);
-    console.log('URL de login:', `${this.apiUrl}/auth/login`); // Para debugging
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials)
+    
+    // Obtener todos los usuarios y encontrar coincidencia
+    return this.http.get<User[]>(`${this.apiUrl}/users/`)
       .pipe(
+        map(users => {
+          const user = users.find(u => 
+            u.email === credentials.email && 
+            // En un sistema real, esto sería un hash comparison
+            // Pero aquí estamos simplificando para el ejemplo
+            u.hashed_password === credentials.password
+          );
+          
+          if (!user) {
+            throw new HttpErrorResponse({
+              error: { message: 'Usuario o contraseña incorrectos' },
+              status: 401
+            });
+          }
+          
+          // Generar un token simple basado en el email y timestamp
+          const token = btoa(user.email + ':' + Date.now());
+          
+          return {
+            user,
+            token
+          };
+        }),
         tap((response: AuthResponse) => {
           console.log('Respuesta del login:', response);
           if (response.token) {
@@ -101,6 +133,35 @@ export class AuthService {
       );
   }
 
+  // Método de simulación para desarrollo
+  mockLogin(credentials: { email: string; password: string }): Observable<AuthResponse> {
+    // Para propósitos de desarrollo/pruebas
+    if (credentials.email === 'test@example.com' && credentials.password === 'password') {
+      const mockUser = {
+        id: 1,
+        email: 'test@example.com',
+        dicose: '12345',
+        phone: '099123456',
+        is_active: true,
+        is_admin: false
+      };
+      
+      const mockResponse = {
+        user: mockUser,
+        token: 'mock-token-' + Date.now()
+      };
+      
+      return of(mockResponse).pipe(
+        tap(response => {
+          this.setAuthData(response);
+          this.router.navigate(['/inicio']);
+        })
+      );
+    }
+    
+    return throwError(() => new Error('Usuario o contraseña incorrectos'));
+  }
+
   logout() {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
@@ -115,7 +176,7 @@ export class AuthService {
 
   isAdmin(): boolean {
     const user = this.getCurrentUser();
-    return user?.role === 'admin';
+    return user?.is_admin === true;
   }
 
   googleSignIn(): Observable<AuthResponse> {

@@ -12,11 +12,48 @@ RUN npm install
 # Copiar el código fuente
 COPY . .
 
-# Modificar el archivo proxy.conf.json para apuntar al backend en Docker
-RUN sed -i 's|http://localhost:3001|http://backend:3001|g' proxy.conf.json
+# Primero crear el archivo nginx.conf en caso de que no exista
+RUN mkdir -p docker && echo 'server { \
+    listen 80; \
+    server_name localhost; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+    location /api/ { \
+        proxy_pass http://backend:3001; \
+        proxy_http_version 1.1; \
+        proxy_set_header Upgrade $http_upgrade; \
+        proxy_set_header Connection "upgrade"; \
+        proxy_set_header Host $host; \
+        proxy_cache_bypass $http_upgrade; \
+    } \
+}' > docker/nginx.conf
 
-# Construir la aplicación
-RUN npm run build
+# Forzar el proxy.conf.json a usar el backend local
+RUN echo '{ \
+  "/api": { \
+    "target": "http://backend:3001", \
+    "secure": false, \
+    "changeOrigin": true \
+  } \
+}' > proxy.conf.json
+
+# Forzar environment.prod.ts a usar API local
+RUN echo 'export const environment = { \
+  production: true, \
+  apiUrl: "/api" \
+};' > src/environments/environment.prod.ts
+
+# Forzar environment.ts a usar API local
+RUN echo 'export const environment = { \
+  production: false, \
+  apiUrl: "/api" \
+};' > src/environments/environment.ts
+
+# Construir la aplicación con configuración de producción
+RUN npm run build -- --configuration=production
 
 # Etapa de producción
 FROM nginx:stable-alpine
@@ -25,10 +62,7 @@ FROM nginx:stable-alpine
 COPY --from=build /app/dist/traza-net/browser /usr/share/nginx/html
 
 # Copiar configuración personalizada de nginx
-COPY --from=build /app/dist/traza-net/browser /usr/share/nginx/html
-
-# Configuración de nginx - Arreglando la ruta
-COPY ../docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Puerto en el que se ejecutará nginx
 EXPOSE 80

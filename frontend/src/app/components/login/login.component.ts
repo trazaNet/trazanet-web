@@ -118,7 +118,8 @@ export class LoginComponent {
     } else {
       // Login
       console.log('Intentando iniciar sesión con:', { email: this.email });
-      this.authService.login({
+      // Usar mockLogin en lugar de login para desarrollo
+      this.authService.mockLogin({
         email: this.email,
         password: this.password
       }).subscribe({
@@ -138,6 +139,8 @@ export class LoginComponent {
             errorMessage = 'No se pudo conectar con el servidor. Por favor, intente más tarde.';
           } else if (error.error?.message) {
             errorMessage = error.error.message;
+          } else if (error.message) {
+            errorMessage = error.message;
           }
 
           this.toastr.error(errorMessage, 'Error de autenticación');

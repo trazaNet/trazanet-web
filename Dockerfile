@@ -12,6 +12,16 @@ RUN npm ci
 # Copiar el resto de los archivos del frontend
 COPY frontend/. .
 
+# Forzar entornos locales antes de construir
+RUN echo 'export const environment = { \
+  production: true, \
+  apiUrl: "/api" \
+};' > src/environments/environment.prod.ts && \
+    echo 'export const environment = { \
+  production: false, \
+  apiUrl: "/api" \
+};' > src/environments/environment.ts
+
 # Construir la aplicación Angular en modo producción
 RUN npm run build -- --configuration=production && \
     ls -la dist/traza-net/ && \
@@ -54,11 +64,13 @@ RUN echo "Verificando archivos en public:" && \
 # Variables de entorno
 ENV NODE_ENV=production
 ENV PORT=3001
+# Eliminar cualquier referencia a Railway
+ENV API_BASE_URL=/api
 
-# Exponer el puerto (Railway configurará el puerto automáticamente)
+# Exponer el puerto
 EXPOSE ${PORT}
 
-# Script para verificar el servicio y mostrar más información
+# Script para verificar el servicio
 RUN echo '#!/bin/sh\n\
 echo "Checking health endpoint..."\n\
 echo "Current time: $(date)"\n\
@@ -81,7 +93,7 @@ else\n\
   exit 1\n\
 fi' > /healthcheck.sh && chmod +x /healthcheck.sh
 
-# Healthcheck para Railway usando el script
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=120s --retries=3 \
     CMD /healthcheck.sh
 

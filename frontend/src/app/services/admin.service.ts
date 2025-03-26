@@ -9,9 +9,7 @@ import { AuthService } from './auth.service';
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = environment.production 
-    ? 'https://trazanet-production.up.railway.app/api'
-    : environment.apiUrl;
+  private apiUrl = environment.apiUrl;
 
   constructor(
     private http: HttpClient,

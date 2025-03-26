@@ -4,12 +4,13 @@ import { Animal } from '../interfaces/animal.interface';
 import * as XLSX from 'xlsx';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AnimalesService {
-  private readonly API_URL = 'http://localhost:3001/api/excel';
+  private readonly API_URL = `${environment.apiUrl}/excel`;
   private animalesSubject = new BehaviorSubject<Animal[]>([]);
   animales$ = this.animalesSubject.asObservable();
 

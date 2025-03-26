@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Annotated
@@ -217,10 +217,8 @@ async def dev_auth_middleware(request: Request, call_next):
     else:
         # Aquí puedes agregar la lógica de autenticación para otros perfiles
         # Por ejemplo, verificar un token de autorización
-        pass
-
-# Añadir el middleware a la aplicación
-app.middleware_stack.add_middleware(dev_auth_middleware)
+        response = await call_next(request)
+        return response
 
 if __name__ == "__main__":
     import uvicorn

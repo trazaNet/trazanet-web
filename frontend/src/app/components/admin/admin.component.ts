@@ -28,12 +28,12 @@ import { HttpErrorResponse } from '@angular/common/http';
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{user.email}}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{user.name}}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{user.lastName}}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{user.role}}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{user.is_admin ? 'Administrador' : 'Usuario'}}</td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button 
                   (click)="deleteUser(user.id)"
                   class="text-red-600 hover:text-red-900"
-                  [disabled]="user.role === 'admin'">
+                  [disabled]="user.is_admin">
                   Eliminar
                 </button>
               </td>
