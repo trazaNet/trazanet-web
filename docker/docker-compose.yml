@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # Servicio de base de datos PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: trazanet-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - trazanet-network
+
+  # Servicio pgAdmin para administrar la base de datos
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: trazanet-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - trazanet-network
+
+  # Servicio backend (Python/FastAPI)
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: trazanet-backend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DEVELOPMENT_PROFILE=${DEVELOPMENT_PROFILE}
+      - MODEL_NAME=${MODEL_NAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ../backend:/app
+    depends_on:
+      - postgres
+    networks:
+      - trazanet-network
+
+  # Servicio frontend (Angular)
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: trazanet-frontend
+    restart: always
+    ports:
+      - "4200:80"
+    volumes:
+      - ../frontend:/app
+    depends_on:
+      - backend
+    networks:
+      - trazanet-network
+
+networks:
+  trazanet-network:
+    driver: bridge
+
+volumes:
+  postgres_data: 

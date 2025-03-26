@@ -1,0 +1,36 @@
+# Etapa de construcción
+FROM node:20 AS build
+
+WORKDIR /app
+
+# Copiar archivos de configuración
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm install
+
+# Copiar el código fuente
+COPY . .
+
+# Modificar el archivo proxy.conf.json para apuntar al backend en Docker
+RUN sed -i 's|http://localhost:3001|http://backend:3001|g' proxy.conf.json
+
+# Construir la aplicación
+RUN npm run build
+
+# Etapa de producción
+FROM nginx:stable-alpine
+
+# Copiar el build de la aplicación al directorio de nginx
+COPY --from=build /app/dist/traza-net/browser /usr/share/nginx/html
+
+# Copiar configuración personalizada de nginx
+COPY --from=build /app/dist/traza-net/browser /usr/share/nginx/html
+
+# Configuración de nginx - Arreglando la ruta
+COPY ../docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Puerto en el que se ejecutará nginx
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"] 
