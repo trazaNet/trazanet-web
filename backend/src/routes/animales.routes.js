@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 const { verifyToken } = require('../middleware/auth');
+const { getMisAnimales, getAnimalById } = require('../controllers/animales.controller');
 
 // Obtener todos los animales
 router.get('/', verifyToken, async (req, res) => {
@@ -46,5 +47,11 @@ router.delete('/clear', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar los registros' });
   }
 });
+
+// Obtener mis animales
+router.get('/mis-animales', verifyToken, getMisAnimales);
+
+// Obtener un animal por ID
+router.get('/:id', verifyToken, getAnimalById);
 
 module.exports = router; 

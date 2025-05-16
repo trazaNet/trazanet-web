@@ -82,8 +82,34 @@ const updateUserRole = async (req, res) => {
   }
 };
 
+const getUserById = async (req, res) => {
+  const { id } = req.params;
+  let client;
+  try {
+    client = await db.getClient();
+    const result = await client.query(
+      'SELECT id, email, name, last_name, role, dicose, phone FROM users WHERE id = $1',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error al obtener usuario:', error);
+    res.status(500).json({ message: 'Error al obtener usuario' });
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+};
+
 module.exports = {
   getUsers,
   deleteUser,
-  updateUserRole
+  updateUserRole,
+  getUserById
 }; 

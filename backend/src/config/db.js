@@ -14,12 +14,13 @@ if (!process.env.DATABASE_URL) {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false
+    rejectUnauthorized: false // Necesario para Supabase
   },
-  // Add some connection pool settings
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-  connectionTimeoutMillis: 2000, // How long to wait for a connection
+  // Configuración específica para Supabase
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+  application_name: 'trazanet_backend'
 });
 
 // Connection event handlers
@@ -29,106 +30,29 @@ pool.on('connect', () => {
 
 pool.on('error', (err) => {
   console.error('Unexpected error on idle PostgreSQL client:', err);
+  // No cerramos el proceso en caso de error para permitir reintentos
+  console.error('Error details:', {
+    message: err.message,
+    code: err.code,
+    detail: err.detail
+  });
 });
 
 pool.on('remove', () => {
   console.log('Client removed from pool');
 });
 
-// Test connection function with detailed error handling
 const testConnection = async () => {
   let client;
   try {
+    console.log('Testing database connection...');
     client = await pool.connect();
-    console.log('Database connection test successful');
     const result = await client.query('SELECT NOW()');
-    console.log('Database query test successful:', result.rows[0]);
+    console.log('Database connection successful:', result.rows[0]);
     return true;
-  } catch (err) {
-    console.error('Database connection test failed:', {
-      message: err.message,
-      code: err.code,
-      detail: err.detail,
-      hint: err.hint,
-      position: err.position,
-      where: err.where,
-      schema: err.schema,
-      table: err.table,
-      column: err.column,
-      dataType: err.dataType,
-      constraint: err.constraint
-    });
-    throw err;
-  } finally {
-    if (client) {
-      client.release();
-    }
-  }
-};
-
-// Initialize database function with better error handling
-const initializeDatabase = async () => {
-  let client;
-  try {
-    // First test the connection
-    await testConnection();
-    
-    client = await pool.connect();
-    
-    // Create users table if not exists
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        dicose VARCHAR(50) UNIQUE NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
-        phone VARCHAR(20),
-        password VARCHAR(255) NOT NULL,
-        name VARCHAR(100),
-        last_name VARCHAR(100),
-        role VARCHAR(20) DEFAULT 'user',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // Create animales table if not exists
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS animales (
-        id SERIAL PRIMARY KEY,
-        dispositivo VARCHAR(50),
-        raza VARCHAR(100),
-        cruza VARCHAR(100),
-        sexo VARCHAR(10),
-        edad_meses INTEGER,
-        edad_dias INTEGER,
-        propietario VARCHAR(50),
-        nombre_propietario VARCHAR(100),
-        ubicacion VARCHAR(200),
-        tenedor VARCHAR(100),
-        status_vida VARCHAR(50),
-        status_trazabilidad VARCHAR(50),
-        errores TEXT,
-        fecha_identificacion DATE,
-        fecha_registro DATE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    console.log('Database initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize database:', {
-      message: error.message,
-      code: error.code,
-      detail: error.detail,
-      hint: error.hint,
-      position: error.position,
-      where: error.where,
-      schema: error.schema,
-      table: error.table,
-      column: error.column,
-      dataType: error.dataType,
-      constraint: error.constraint
-    });
-    throw error;
+    console.error('Database connection test failed:', error);
+    return false;
   } finally {
     if (client) {
       client.release();
@@ -136,32 +60,33 @@ const initializeDatabase = async () => {
   }
 };
 
-// Export a function to get a client from the pool with error handling
+const initializeDatabase = async () => {
+  try {
+    console.log('Iniciando inicialización de la base de datos...');
+    const isConnected = await testConnection();
+    if (!isConnected) {
+      throw new Error('No se pudo conectar a la base de datos');
+    }
+    console.log('Conexión a la base de datos establecida correctamente');
+  } catch (error) {
+    console.error('Error al inicializar la base de datos:', error);
+    throw error;
+  }
+};
+
 const getClient = async () => {
-  const client = await pool.connect();
-  const query = client.query.bind(client);
-  const release = client.release.bind(client);
-
-  // Set a timeout of 5 seconds on idle clients
-  const timeout = setTimeout(() => {
-    console.error('A client has been checked out for too long.');
-    console.error('The last executed query on this client was:', client.lastQuery);
-  }, 5000);
-
-  // Clear timeout on client release
-  client.release = () => {
-    clearTimeout(timeout);
-    client.query = query;
-    client.release = release;
-    return release.apply(client);
-  };
-
-  return client;
+  try {
+    const client = await pool.connect();
+    return client;
+  } catch (error) {
+    console.error('Error getting database client:', error);
+    throw new Error('Database connection error');
+  }
 };
 
 module.exports = {
-  query: (text, params) => pool.query(text, params),
+  pool,
   getClient,
-  initializeDatabase,
-  testConnection
+  testConnection,
+  initializeDatabase
 }; 

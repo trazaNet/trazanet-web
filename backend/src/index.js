@@ -6,7 +6,7 @@ const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const excelRoutes = require('./routes/excel.routes');
 const animalesRoutes = require('./routes/animales.routes');
-const initializeDatabase = require('./db/init');
+const { initializeDatabase } = require('./db/init');
 require('dotenv').config();
 
 const app = express();
@@ -108,3 +108,5 @@ initializeDatabase()
     // No cerramos el servidor, solo logueamos el error
     console.log('El servidor continuará funcionando sin la base de datos');
   }); 
+
+  require('dotenv').config();

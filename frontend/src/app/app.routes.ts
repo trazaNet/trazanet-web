@@ -1,35 +1,24 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './components/login/login.component';
-import { RegisterComponent } from './components/register/register.component';
-import { TablaAnimalesComponent } from './components/tabla-animales/tabla-animales.component';
-import { InicioComponent } from './components/inicio/inicio.component';
-import { ListasPersonalizadasComponent } from './components/listas-personalizadas/listas-personalizadas.component';
-import { CargarGuiasComponent } from './components/cargar-guias/cargar-guias.component';
 import { AuthGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
-  { 
-    path: 'inicio', 
-    component: InicioComponent,
-    canActivate: [AuthGuard]
+  {
+    path: '',
+    redirectTo: 'login',
+    pathMatch: 'full'
   },
-  { 
-    path: 'datos', 
-    component: TablaAnimalesComponent,
-    canActivate: [AuthGuard]
+  {
+    path: 'login',
+    loadComponent: () => import('./components/login/login.component').then(m => m.LoginComponent)
   },
-  { 
-    path: 'listas', 
-    component: ListasPersonalizadasComponent,
-    canActivate: [AuthGuard]
+  {
+    path: 'register',
+    loadComponent: () => import('./components/register/register.component').then(m => m.RegisterComponent)
   },
-  { 
-    path: 'guias/cargar', 
-    component: CargarGuiasComponent,
+  {
+    path: 'inicio',
+    loadComponent: () => import('./components/inicio/inicio.component').then(m => m.InicioComponent),
     canActivate: [AuthGuard]
   },
   {
@@ -37,5 +26,13 @@ export const routes: Routes = [
     loadComponent: () => import('./components/admin/admin.component').then(m => m.AdminComponent),
     canActivate: [AuthGuard, adminGuard]
   },
-  { path: '**', redirectTo: 'login' }
+  {
+    path: 'mis-animales',
+    loadComponent: () => import('./components/mis-animales/mis-animales.component').then(m => m.MisAnimalesComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: '**',
+    redirectTo: 'login'
+  }
 ];

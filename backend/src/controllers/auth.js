@@ -81,6 +81,12 @@ const login = async (req, res) => {
   const { email, password } = req.body;
   let client;
 
+  if (!email || !password) {
+    return res.status(400).json({
+      message: 'Email y contraseña son requeridos'
+    });
+  }
+
   try {
     console.log('Intentando obtener cliente de la base de datos...');
     client = await db.getClient();
@@ -118,13 +124,20 @@ const login = async (req, res) => {
       });
     }
 
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET no está configurado');
+      return res.status(500).json({
+        message: 'Error en la configuración del servidor'
+      });
+    }
+
     console.log('Contraseña válida, generando token...');
     const token = jwt.sign(
       { 
         id: user.id,
         role: user.role || 'user'
       },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
 
@@ -152,6 +165,12 @@ const login = async (req, res) => {
       dataType: error.dataType,
       constraint: error.constraint
     });
+
+    if (error.message === 'Database connection error') {
+      return res.status(503).json({
+        message: 'Error de conexión con la base de datos'
+      });
+    }
 
     res.status(500).json({
       message: 'Error en el servidor',

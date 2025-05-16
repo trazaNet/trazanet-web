@@ -28,7 +28,7 @@ export class AuthService {
     private http: HttpClient
   ) {
     this.checkAuthStatus();
-    console.log('API URL:', this.apiUrl); // Para debugging
+    console.log('API URL:', this.apiUrl);
   }
 
   private hasToken(): boolean {
@@ -51,17 +51,8 @@ export class AuthService {
   register(userData: Omit<User, 'id' | 'role'>): Observable<AuthResponse> {
     console.log('Intentando registrar usuario:', userData);
     
-    // Usar el endpoint de users para registro
-    return this.http.post<User>(`${this.apiUrl}/users/`, userData)
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData)
       .pipe(
-        map(user => {
-          // Generar un token temporal
-          const tempToken = btoa(user.email + ':' + Date.now());
-          return {
-            user,
-            token: tempToken
-          };
-        }),
         tap((response: AuthResponse) => {
           console.log('Respuesta del registro:', response);
           if (response.token) {
@@ -69,49 +60,15 @@ export class AuthService {
             this.router.navigate(['/login']);
           }
         }),
-        catchError((error: HttpErrorResponse) => {
-          let errorMessage = 'Error en el registro';
-          if (error.status === 409) {
-            errorMessage = 'El email ya está registrado';
-          } else if (error.status === 400) {
-            errorMessage = error.error?.message || 'Datos de registro inválidos';
-          } else if (error.status === 500) {
-            errorMessage = 'Error interno del servidor';
-          }
-          return throwError(() => new Error(errorMessage));
-        })
+        catchError(this.handleError)
       );
   }
 
   login(credentials: { email: string; password: string }): Observable<AuthResponse> {
     console.log('Intentando iniciar sesión:', credentials);
     
-    // Obtener todos los usuarios y encontrar coincidencia
-    return this.http.get<User[]>(`${this.apiUrl}/users/`)
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials)
       .pipe(
-        map(users => {
-          const user = users.find(u => 
-            u.email === credentials.email && 
-            // En un sistema real, esto sería un hash comparison
-            // Pero aquí estamos simplificando para el ejemplo
-            u.hashed_password === credentials.password
-          );
-          
-          if (!user) {
-            throw new HttpErrorResponse({
-              error: { message: 'Usuario o contraseña incorrectos' },
-              status: 401
-            });
-          }
-          
-          // Generar un token simple basado en el email y timestamp
-          const token = btoa(user.email + ':' + Date.now());
-          
-          return {
-            user,
-            token
-          };
-        }),
         tap((response: AuthResponse) => {
           console.log('Respuesta del login:', response);
           if (response.token) {
@@ -119,47 +76,8 @@ export class AuthService {
             this.router.navigate(['/inicio']);
           }
         }),
-        catchError((error: HttpErrorResponse) => {
-          let errorMessage = 'Error en el inicio de sesión';
-          if (error.status === 401) {
-            errorMessage = 'Usuario o contraseña incorrectos';
-          } else if (error.status === 404) {
-            errorMessage = 'Usuario no encontrado';
-          } else if (error.status === 500) {
-            errorMessage = 'Error interno del servidor';
-          }
-          return throwError(() => new Error(errorMessage));
-        })
+        catchError(this.handleError)
       );
-  }
-
-  // Método de simulación para desarrollo
-  mockLogin(credentials: { email: string; password: string }): Observable<AuthResponse> {
-    // Para propósitos de desarrollo/pruebas
-    if (credentials.email === 'test@example.com' && credentials.password === 'password') {
-      const mockUser = {
-        id: 1,
-        email: 'test@example.com',
-        dicose: '12345',
-        phone: '099123456',
-        is_active: true,
-        is_admin: false
-      };
-      
-      const mockResponse = {
-        user: mockUser,
-        token: 'mock-token-' + Date.now()
-      };
-      
-      return of(mockResponse).pipe(
-        tap(response => {
-          this.setAuthData(response);
-          this.router.navigate(['/inicio']);
-        })
-      );
-    }
-    
-    return throwError(() => new Error('Usuario o contraseña incorrectos'));
   }
 
   logout() {
@@ -167,11 +85,14 @@ export class AuthService {
     localStorage.removeItem(this.userKey);
     localStorage.removeItem('isAuthenticated');
     this.isAuthenticatedSubject.next(false);
+    this.userSubject.next(null);
     this.router.navigate(['/login']);
   }
 
   isLoggedIn(): boolean {
-    return this.isAuthenticatedSubject.value;
+    const token = this.getToken();
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    return !!token && isAuthenticated;
   }
 
   isAdmin(): boolean {
@@ -187,7 +108,14 @@ export class AuthService {
   private checkAuthStatus() {
     const token = this.getToken();
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    this.isAuthenticatedSubject.next(!!token && isAuthenticated);
+    const user = this.getCurrentUser();
+    
+    if (token && isAuthenticated && user) {
+      this.isAuthenticatedSubject.next(true);
+      this.userSubject.next(user);
+    } else {
+      this.logout();
+    }
   }
 
   private setAuthData(response: AuthResponse): void {
@@ -195,16 +123,19 @@ export class AuthService {
     localStorage.setItem(this.userKey, JSON.stringify(response.user));
     localStorage.setItem('isAuthenticated', 'true');
     this.isAuthenticatedSubject.next(true);
+    this.userSubject.next(response.user);
   }
 
   private handleError(error: HttpErrorResponse) {
-    let errorMessage = 'Ha ocurrido un error desconocido';
-    if (error.error instanceof ErrorEvent) {
-      // Error del lado del cliente
+    let errorMessage = 'Error en el inicio de sesión';
+    if (error.status === 401) {
+      errorMessage = 'Usuario o contraseña incorrectos';
+    } else if (error.status === 404) {
+      errorMessage = 'Usuario no encontrado';
+    } else if (error.status === 500) {
+      errorMessage = 'Error interno del servidor';
+    } else if (error.error?.message) {
       errorMessage = error.error.message;
-    } else {
-      // Error del lado del servidor
-      errorMessage = error.error?.message || `Error ${error.status}: ${error.statusText}`;
     }
     return throwError(() => new Error(errorMessage));
   }

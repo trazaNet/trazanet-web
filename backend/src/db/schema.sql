@@ -2,10 +2,13 @@
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   dicose VARCHAR(50) UNIQUE NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  phone VARCHAR(20) NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  phone VARCHAR(20),
   password VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  name VARCHAR(100),
+  last_name VARCHAR(100),
+  role VARCHAR(20) DEFAULT 'user',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Crear la tabla de animales si no existe
@@ -26,7 +29,7 @@ CREATE TABLE IF NOT EXISTS animales (
   errores TEXT,
   fecha_identificacion DATE,
   fecha_registro DATE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Crear índices para mejorar el rendimiento de las búsquedas

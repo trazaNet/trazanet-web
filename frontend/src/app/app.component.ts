@@ -22,7 +22,10 @@ import { ThemeService } from './services/theme.service';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  host: {
+    '[class.auth-page]': 'isAuthPage'
+  }
 })
 export class AppComponent implements OnInit, AfterViewChecked {
   title = 'trazaNet';
@@ -41,6 +44,7 @@ export class AppComponent implements OnInit, AfterViewChecked {
   currentRoute = '';
   isExpanded: boolean = false;
   isDarkTheme = false;
+  isChatExpanded = false;
 
   @ViewChild('chatMessages') private chatMessages!: ElementRef;
   
@@ -273,5 +277,9 @@ export class AppComponent implements OnInit, AfterViewChecked {
 
   isAdmin(): boolean {
     return this.authService.isAdmin();
+  }
+
+  toggleChatSize() {
+    this.isChatExpanded = !this.isChatExpanded;
   }
 }

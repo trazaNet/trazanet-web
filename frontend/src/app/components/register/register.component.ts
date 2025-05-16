@@ -43,7 +43,9 @@ export class RegisterComponent implements OnInit {
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
       name: ['', Validators.required],
-      lastName: ['', Validators.required]
+      lastName: ['', Validators.required],
+      dicose: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
+      phone: ['', [Validators.required, Validators.pattern('^[0-9]*$')]]
     }, {
       validator: this.passwordMatchValidator
     });
@@ -73,6 +75,22 @@ export class RegisterComponent implements OnInit {
 
       if (this.f['lastName'].errors?.['required']) {
         this.toastr.warning('El apellido es requerido', 'Campo incompleto');
+        return;
+      }
+
+      if (this.f['dicose'].errors?.['required']) {
+        this.toastr.warning('El DICOSE es requerido', 'Campo incompleto');
+        return;
+      } else if (this.f['dicose'].errors?.['pattern']) {
+        this.toastr.warning('El DICOSE solo debe contener números', 'Formato inválido');
+        return;
+      }
+
+      if (this.f['phone'].errors?.['required']) {
+        this.toastr.warning('El teléfono es requerido', 'Campo incompleto');
+        return;
+      } else if (this.f['phone'].errors?.['pattern']) {
+        this.toastr.warning('El teléfono solo debe contener números', 'Formato inválido');
         return;
       }
 

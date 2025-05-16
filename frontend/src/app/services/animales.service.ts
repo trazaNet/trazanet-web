@@ -13,6 +13,7 @@ export class AnimalesService {
   private readonly API_URL = `${environment.apiUrl}/excel`;
   private animalesSubject = new BehaviorSubject<Animal[]>([]);
   animales$ = this.animalesSubject.asObservable();
+  private apiUrl = `${environment.apiUrl}/animales`;
 
   constructor(
     private http: HttpClient,
@@ -48,13 +49,19 @@ export class AnimalesService {
     console.log('Buscando dispositivo:', dispositivo, 'en', animales.length, 'animales');
     
     const animalEncontrado = animales.find(animal => {
-      // Limpiar el número de dispositivo del animal de cualquier formato especial
       const numeroAnimal = animal.dispositivo.replace(/[^0-9]/g, '');
-      // Comparar los últimos 8 dígitos
       return numeroAnimal.endsWith(dispositivo);
     });
 
     console.log('Resultado de búsqueda:', animalEncontrado);
     return animalEncontrado;
+  }
+
+  getMisAnimales(): Observable<Animal[]> {
+    return this.http.get<Animal[]>(`${this.apiUrl}/mis-animales`);
+  }
+
+  getAnimalById(id: number): Observable<Animal> {
+    return this.http.get<Animal>(`${this.apiUrl}/${id}`);
   }
 } 

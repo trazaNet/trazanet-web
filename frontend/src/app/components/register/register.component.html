@@ -61,6 +61,36 @@
             </div>
 
             <div class="form-group">
+              <label for="dicose">DICOSE</label>
+              <input
+                type="text"
+                id="dicose"
+                formControlName="dicose"
+                [ngClass]="{ 'is-invalid': submitted && f['dicose'].errors }"
+                maxlength="12"
+              />
+              <div *ngIf="submitted && f['dicose'].errors" class="invalid-feedback">
+                <div *ngIf="f['dicose'].errors['required']">El DICOSE es requerido</div>
+                <div *ngIf="f['dicose'].errors['pattern']">El DICOSE solo debe contener números</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Teléfono</label>
+              <input
+                type="tel"
+                id="phone"
+                formControlName="phone"
+                [ngClass]="{ 'is-invalid': submitted && f['phone'].errors }"
+                maxlength="9"
+              />
+              <div *ngIf="submitted && f['phone'].errors" class="invalid-feedback">
+                <div *ngIf="f['phone'].errors['required']">El teléfono es requerido</div>
+                <div *ngIf="f['phone'].errors['pattern']">El teléfono solo debe contener números</div>
+              </div>
+            </div>
+
+            <div class="form-group">
               <label for="email">Email</label>
               <input
                 type="email"

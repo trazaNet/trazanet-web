@@ -1,17 +1,28 @@
 export interface Animal {
+    id: number;
     dispositivo: string;
     raza: string;
     cruza: string;
     sexo: string;
-    edadMeses: number;
-    edadDias: number;
+    edad_meses: number;
+    edad_dias: number;
     propietario: string;
-    nombrePropietario: string;
+    nombre_propietario: string;
     ubicacion: string;
     tenedor: string;
-    statusVida: string;
-    statusTrazabilidad: string;
+    status_vida: string;
+    status_trazabilidad: string;
     errores: string;
-    fechaIdentificacion: string;
-    fechaRegistro: string;
+    fecha_identificacion: string;
+    fecha_registro: string;
+    created_at: string;
+
+    // Nuevas propiedades para la tabla
+    categoria?: string;
+    altura_anca?: number;
+    largo_pelvis?: number;
+    ancho_pelvis?: number;
+    condicion_corporal?: string;
+    peso?: number;
+    ultima_actualizacion?: string;
 } 

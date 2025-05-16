@@ -11,40 +11,40 @@ import { Router } from '@angular/router';
       <header class="inicio-header">
         <h1>Bienvenido a TrazaNet</h1>
         <p class="subtitle">Sistema de Gestión de Trazabilidad Animal</p>
-        <button class="start-button" (click)="navigate('datos')">
+        <button class="start-button" (click)="navigate('mis-animales')">
           <span>Comenzar</span>
-          <i class="fas fa-arrow-right"></i>
+          <span>→</span>
         </button>
       </header>
 
       <div class="features-grid">
-        <div class="feature-card" (click)="navigate('datos')">
+        <div class="feature-card" (click)="navigate('mis-animales')">
           <div class="icon-container">
-            <i class="fas fa-table"></i>
+            <span>🐄</span>
           </div>
           <h3>Gestión de Datos</h3>
           <p>Visualiza y gestiona la información de tus animales de manera eficiente</p>
         </div>
 
-        <div class="feature-card" (click)="navigate('datos')">
+        <div class="feature-card" (click)="navigate('mis-animales')">
           <div class="icon-container">
-            <i class="fas fa-users"></i>
+            <span>👥</span>
           </div>
           <h3>Gestión de Propietarios</h3>
           <p>Administra la información de propietarios y sus animales asociados</p>
         </div>
 
-        <div class="feature-card" (click)="navigate('datos')">
+        <div class="feature-card" (click)="navigate('mis-animales')">
           <div class="icon-container">
-            <i class="fas fa-list"></i>
+            <span>📋</span>
           </div>
           <h3>Listas Personalizadas</h3>
           <p>Crea y gestiona listas personalizadas de propietarios y animales</p>
         </div>
 
-        <div class="feature-card" (click)="navigate('datos')">
+        <div class="feature-card" (click)="navigate('mis-animales')">
           <div class="icon-container">
-            <i class="fas fa-file-alt"></i>
+            <span>📄</span>
           </div>
           <h3>Registro de Guías</h3>
           <p>Gestiona el registro y seguimiento de guías de manera eficiente</p>
@@ -63,10 +63,10 @@ import { Router } from '@angular/router';
       text-align: center;
       margin-bottom: 3rem;
       padding: 3rem;
-      background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
       color: white;
       border-radius: 16px;
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -86,7 +86,7 @@ import { Router } from '@angular/router';
 
     .start-button {
       background: white;
-      color: var(--primary-green);
+      color: #2ecc71;
       border: none;
       padding: 1rem 2rem;
       border-radius: 50px;
@@ -97,21 +97,13 @@ import { Router } from '@angular/router';
       display: flex;
       align-items: center;
       gap: 12px;
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-        background: var(--light-green);
-      }
-
-      i {
-        transition: transform 0.3s ease;
-      }
-
-      &:hover i {
-        transform: translateX(5px);
-      }
+    .start-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      background: #f0f9f4;
     }
 
     .features-grid {
@@ -123,33 +115,24 @@ import { Router } from '@angular/router';
     }
 
     .feature-card {
-      background: var(--background-light);
+      background: white;
       padding: 2rem;
       border-radius: 16px;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
       text-align: center;
       transition: all 0.3s ease;
       cursor: pointer;
       border: 2px solid transparent;
+    }
 
-      &:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--shadow-md);
-        border-color: var(--light-green);
-
-        .icon-container {
-          background: var(--light-green);
-          transform: scale(1.1);
-        }
-
-        h3 {
-          color: var(--primary-green);
-        }
-      }
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-color: #2ecc71;
     }
 
     .icon-container {
-      background: var(--background-grey);
+      background: #f8f9fa;
       width: 80px;
       height: 80px;
       border-radius: 50%;
@@ -158,22 +141,27 @@ import { Router } from '@angular/router';
       justify-content: center;
       margin: 0 auto 1.5rem;
       transition: all 0.3s ease;
+      font-size: 2rem;
     }
 
-    .icon-container i {
-      font-size: 2rem;
-      color: var(--primary-green);
+    .feature-card:hover .icon-container {
+      background: #f0f9f4;
+      transform: scale(1.1);
     }
 
     .feature-card h3 {
-      color: var(--text-primary);
+      color: #2c3e50;
       margin-bottom: 1rem;
       font-size: 1.3rem;
       transition: color 0.3s ease;
     }
 
+    .feature-card:hover h3 {
+      color: #2ecc71;
+    }
+
     .feature-card p {
-      color: var(--text-secondary);
+      color: #7f8c8d;
       line-height: 1.6;
       font-size: 1rem;
     }
