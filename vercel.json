@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "buildCommand": "cd web/frontend && npm install && npm run build:prod",
+  "outputDirectory": "web/frontend/dist/traza-net/browser",
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
+}
