@@ -40,7 +40,7 @@
         <span>Inicio</span>
       </li>
       <li class="menu-item" [class.active]="currentRoute === 'mis-animales'" (click)="navigateTo('mis-animales')">
-        <img src="assets/images/cow-silhouette.svg" class="menu-icon" alt="Mi Ganado">
+        <img src="assets/vacaMisAnimalesLogo2.png" class="menu-icon" alt="Mi Ganado">
         <span>Mis Animales</span>
       </li>
       <li class="menu-item" [class.active]="currentRoute === 'listas'" (click)="navigateTo('listas')">
@@ -177,7 +177,7 @@
     </li>
     <li id="fa-3" class="radialItem">
       <a href="#" (click)="onFabChat($event)">
-        <i class="fa-solid fa-robot"></i>
+        <img src="assets/juda.png" alt="IA" style="width:48px;height:48px;object-fit:contain;display:block;margin:0 auto;" />
         <span>IA</span>
       </a>
     </li>
@@ -190,11 +190,11 @@
 </button>
 
 <!-- Contenedor del chat -->
-<div class="chat-container" [class.active]="showChat" [class.expanded]="isChatExpanded" *ngIf="!isAuthPage">
-  <div class="chat-header">
-    <h3>Asistente TrazaNet</h3>
+<div class="chat-container" [class.active]="showChat" [class.expanded]="isChatExpanded" [class.gradient-bg]="showPanelImage" [class.show-panel-bg]="showPanelImage" *ngIf="!isAuthPage">
+  <div class="chat-header floating-header" [class.show-panel-bg]="showPanelImage" *ngIf="showFloatingControls">
+    <h3>Preguntale a Judah</h3>
     <div class="chat-actions">
-      <button class="expand-btn" (click)="toggleChatSize()">
+      <button class="expand-chat" style="margin-right:8px;" (click)="toggleChatSize()">
         <i class="fas" [class.fa-expand]="!isChatExpanded" [class.fa-compress]="isChatExpanded"></i>
       </button>
       <button class="close-chat" (click)="toggleChat()">
@@ -202,36 +202,38 @@
       </button>
     </div>
   </div>
-  
-  <div class="chat-messages" #chatMessages>
-    <div class="message" *ngFor="let message of messages" [class.user-message]="message.role === 'user'">
+  <div class="chat-messages" #chatMessages [class.show-panel-image]="showPanelImage">
+    <div class="panel-image-animation" *ngIf="showPanelImage">
+      <img src="assets/judaPanel.jpg" alt="Panel Juda" />
+    </div>
+    <div class="message" *ngFor="let message of messages; let last = last" [class.user-message]="message.role === 'user'">
       <div class="message-content">
-        <i class="fas" [class.fa-user]="message.role === 'user'" [class.fa-robot]="message.role === 'assistant'"></i>
+        <i class="fas" [class.fa-user]="message.role === 'user'"></i>
         <div class="message-text">{{ message.content }}</div>
       </div>
       <div class="message-time">{{ message.timestamp | date:'HH:mm' }}</div>
     </div>
+    <div class="message" *ngIf="typingMessage">
+      <div class="message-content">
+        <div class="message-text">{{ typingMessage }}</div>
+      </div>
+      <div class="message-time">...</div>
+    </div>
   </div>
   
-  <div class="chat-input">
-    <input 
-      type="text" 
-      [(ngModel)]="currentMessage" 
-      placeholder="Escribe tu mensaje..."
-      (keyup.enter)="sendMessage()"
-      [disabled]="isProcessing">
-    <button (click)="sendMessage()" [disabled]="!currentMessage.trim() || isProcessing">
-      <i class="fas" [class.fa-paper-plane]="!isProcessing" [class.fa-spinner]="isProcessing"></i>
+  <div class="chat-input floating-input" [class.show-panel-bg]="showPanelImage" *ngIf="showFloatingControls">
+    <input type="text" placeholder="Escribe tu mensaje..." [(ngModel)]="currentMessage" [disabled]="isProcessing">
+    <button class="send-btn" [disabled]="!currentMessage || isProcessing" (click)="sendMessage()">
+      <i class="fas fa-paper-plane"></i>
     </button>
   </div>
-  <div class="resize-handle"></div>
 </div>
 
 <!-- Panel de Ubicación con Overlay -->
 <ng-container *ngIf="showLocationPanel">
   <div class="location-overlay" (click)="toggleLocationPanel()"></div>
-  <div class="location-panel">
-    <div class="location-header">
+  <div class="location-panel" [class.show-panel-bg]="showLocationPanelAnimation">
+    <div class="location-header" *ngIf="!showLocationPanelAnimation">
       <h3>Ubicación con GeoMu</h3>
       <div class="location-actions">
         <button class="expand-location" style="margin-right:8px;">
@@ -242,7 +244,15 @@
         </button>
       </div>
     </div>
-    <div class="location-content">
+    <!-- Animación de logo centrado sobre gradiente -->
+    <div class="panel-image-animation" *ngIf="showLocationPanelAnimation">
+      <img src="assets/logo.png" alt="Logo" />
+    </div>
+    <!-- Botón para minimizar panel de herramientas de polígonos -->
+    <button class="toggle-draw-controls" *ngIf="!showLocationPanelAnimation" (click)="toggleDrawControls()" title="Herramientas de polígonos">
+      <i class="fas" [ngClass]="showDrawControls ? 'fa-tools' : 'fa-angle-down'"></i>
+    </button>
+    <div class="location-content" [class.fade-panel-image]="showLocationPanelAnimation">
       <div #map id="map"></div>
     </div>
   </div>

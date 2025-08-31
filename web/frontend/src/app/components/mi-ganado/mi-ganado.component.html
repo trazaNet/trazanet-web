@@ -297,31 +297,149 @@
       </table>
     </div>
 
-    <!-- Panel de gráfico centrado -->
+    <!-- Panel de gráfico centrado o detalles -->
     <div class="chart-panel" *ngIf="showChartPanel" [@slideIn]>
       <button class="close-btn" (click)="toggleChartPanel()" style="position:absolute;top:12px;right:12px;z-index:10;">
         <i class="fas fa-times"></i>
       </button>
-      <div class="dashboard-grid">
-        <div class="chart-card">
-          <h4>Evolución del Peso</h4>
-          <canvas #weightChart></canvas>
+      <ng-container *ngIf="chartType === 'detalles'; else chartsPanel">
+        <div class="dashboard-grid">
+          <div class="animal-details-card chart-card">
+            <h2>Detalles del Animal</h2>
+            <div *ngIf="selectedAnimal" class="animal-details-columns">
+              <div class="details-col">
+                <p><strong>Identificación:</strong> {{ selectedAnimal.identificacion }}</p>
+                <p><strong>Raza:</strong> {{ selectedAnimal.raza }}</p>
+                <p><strong>Sexo:</strong> {{ selectedAnimal.sexo }}</p>
+                <p><strong>Categoría:</strong> {{ getCategoria(selectedAnimal) }}</p>
+                <p><strong>Edad:</strong> {{ selectedAnimal.edad }} años</p>
+                <p><strong>Peso:</strong> {{ selectedAnimal.peso }} kg</p>
+                <p><strong>Condición Corporal:</strong> {{ selectedAnimal.condicionCorporal }} / 7</p>
+              </div>
+              <div class="details-col">
+                <p><strong>Largo Pelvis:</strong> {{ selectedAnimal.largoPelvis || '-' }} cm</p>
+                <p><strong>Ancho Pelvis:</strong> {{ selectedAnimal.anchoPelvis || '-' }} cm</p>
+                <p><strong>Altura Anca:</strong> {{ selectedAnimal.alturaAnca || '-' }} cm</p>
+                <p><strong>Campo:</strong> {{ selectedAnimal.campo }}</p>
+                <p><strong>Ubicación:</strong> {{ selectedAnimal.ubicacion }}</p>
+                <p><strong>Estado:</strong> {{ selectedAnimal.estado }}</p>
+                <p><strong>Última Actualización:</strong> {{ selectedAnimal.ultimaActualizacion | date:'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <ng-container *ngIf="selectedAnimal; else campoChart">
+              <h4>Medidas Corporales 3D</h4>
+              <div #medidas3DContainer class="medidas-3d-container"></div>
+            </ng-container>
+            <ng-template #campoChart>
+              <h4>Rendimiento por Campo</h4>
+              <canvas #campoChartCanvas></canvas>
+            </ng-template>
+          </div>
+          <div class="chart-card" style="width:100%;height:350px;">
+            <h4>Mapa de Ubicación</h4>
+            <div #animalMapContainer class="animal-map-container" style="width:100%;height:300px;"></div>
+          </div>
+          <div class="animal-profit-card chart-card" *ngIf="selectedAnimal">
+            <h4>Rentabilidad del Animal</h4>
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                <span>Gráfico</span>
+                <input type="checkbox" [(ngModel)]="showProfitChart">
+              </label>
+            </div>
+            <ng-container *ngIf="!showProfitChart">
+              <p style="margin-top: 10px;">Rentabilidad estimada: <strong>$ N/A</strong></p>
+              <p style="font-size: 13px; color: #888;">(Ejemplo de datos, personalizable)</p>
+            </ng-container>
+            <ng-container *ngIf="showProfitChart">
+              <canvas #profitChart style="width:100%;height:180px;"></canvas>
+            </ng-container>
+          </div>
+          <div class="bitacora-alertas-card chart-card" *ngIf="selectedAnimal">
+            <h4>Bitácora y Alertas</h4>
+            <p style="color:#888;font-size:14px;">Aquí se mostrarán eventos importantes, alertas y registros recientes del animal seleccionado.</p>
+            <!-- Puedes agregar aquí una lista de eventos, alertas o mensajes -->
+          </div>
+          <div class="listas-participa-card chart-card" *ngIf="selectedAnimal">
+            <h4>Listas en que participa</h4>
+            <p style="color:#888;font-size:14px;">Aquí se mostrarán las listas, grupos o lotes en los que participa este animal.</p>
+            <!-- Puedes agregar aquí una lista dinámica de lotes o grupos -->
+          </div>
         </div>
-        <div class="chart-card">
-          <ng-container *ngIf="selectedAnimal; else campoChart">
-            <h4>Medidas Corporales 3D</h4>
-            <div #medidas3DContainer class="medidas-3d-container"></div>
-          </ng-container>
-          <ng-template #campoChart>
-            <h4>Rendimiento por Campo</h4>
-            <canvas #campoChartCanvas></canvas>
-          </ng-template>
+      </ng-container>
+      <ng-template #chartsPanel>
+        <div class="dashboard-grid">
+          <div class="animal-details-card chart-card" *ngIf="selectedAnimal">
+            <h2>Detalles del Animal</h2>
+            <div class="animal-details-columns">
+              <div class="details-col">
+                <p><strong>Identificación:</strong> {{ selectedAnimal.identificacion }}</p>
+                <p><strong>Raza:</strong> {{ selectedAnimal.raza }}</p>
+                <p><strong>Sexo:</strong> {{ selectedAnimal.sexo }}</p>
+                <p><strong>Categoría:</strong> {{ getCategoria(selectedAnimal) }}</p>
+                <p><strong>Edad:</strong> {{ selectedAnimal.edad }} años</p>
+                <p><strong>Peso:</strong> {{ selectedAnimal.peso }} kg</p>
+                <p><strong>Condición Corporal:</strong> {{ selectedAnimal.condicionCorporal }} / 7</p>
+              </div>
+              <div class="details-col">
+                <p><strong>Largo Pelvis:</strong> {{ selectedAnimal.largoPelvis || '-' }} cm</p>
+                <p><strong>Ancho Pelvis:</strong> {{ selectedAnimal.anchoPelvis || '-' }} cm</p>
+                <p><strong>Altura Anca:</strong> {{ selectedAnimal.alturaAnca || '-' }} cm</p>
+                <p><strong>Campo:</strong> {{ selectedAnimal.campo }}</p>
+                <p><strong>Ubicación:</strong> {{ selectedAnimal.ubicacion }}</p>
+                <p><strong>Estado:</strong> {{ selectedAnimal.estado }}</p>
+                <p><strong>Última Actualización:</strong> {{ selectedAnimal.ultimaActualizacion | date:'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Evolución del Peso</h4>
+            <canvas #weightChart></canvas>
+          </div>
+          <div class="chart-card">
+            <ng-container *ngIf="selectedAnimal; else campoChart">
+              <h4>Medidas Corporales 3D</h4>
+              <div #medidas3DContainer class="medidas-3d-container"></div>
+            </ng-container>
+            <ng-template #campoChart>
+              <h4>Rendimiento por Campo</h4>
+              <canvas #campoChartCanvas></canvas>
+            </ng-template>
+          </div>
+          <div class="chart-card" style="width:100%;height:350px;">
+            <h4>Mapa de Ubicación</h4>
+            <div #animalMapContainer class="animal-map-container" style="width:100%;height:300px;"></div>
+          </div>
+          <div class="animal-profit-card chart-card" *ngIf="selectedAnimal">
+            <h4>Rentabilidad del Animal</h4>
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                <span>Gráfico</span>
+                <input type="checkbox" [(ngModel)]="showProfitChart">
+              </label>
+            </div>
+            <ng-container *ngIf="!showProfitChart">
+              <p style="margin-top: 10px;">Rentabilidad estimada: <strong>$ N/A</strong></p>
+              <p style="font-size: 13px; color: #888;">(Ejemplo de datos, personalizable)</p>
+            </ng-container>
+            <ng-container *ngIf="showProfitChart">
+              <canvas #profitChart style="width:100%;height:180px;"></canvas>
+            </ng-container>
+          </div>
+          <div class="bitacora-alertas-card chart-card" *ngIf="selectedAnimal">
+            <h4>Bitácora y Alertas</h4>
+            <p style="color:#888;font-size:14px;">Aquí se mostrarán eventos importantes, alertas y registros recientes del animal seleccionado.</p>
+            <!-- Puedes agregar aquí una lista de eventos, alertas o mensajes -->
+          </div>
+          <div class="listas-participa-card chart-card" *ngIf="selectedAnimal">
+            <h4>Listas en que participa</h4>
+            <p style="color:#888;font-size:14px;">Aquí se mostrarán las listas, grupos o lotes en los que participa este animal.</p>
+            <!-- Puedes agregar aquí una lista dinámica de lotes o grupos -->
+          </div>
         </div>
-      </div>
-      <div class="animal-info" *ngIf="selectedAnimal">
-        <h4>{{ selectedAnimal.identificacion }} - {{ selectedAnimal.raza }}</h4>
-        <p>Edad: {{ selectedAnimal.edad }} años | Peso: {{ selectedAnimal.peso }} kg</p>
-      </div>
+      </ng-template>
     </div>
   </div>
 
@@ -352,10 +470,10 @@
        [style.left.px]="contextMenuX" 
        [style.top.px]="contextMenuY">
     <ul>
-      <!--<li (click)="verDetalles(selectedGanado)">
+      <!-- <li (click)="verDetalles(selectedGanado)">
         <i class="fas fa-eye"></i>
         Ver detalles
-      </li>-->
+      </li> -->
       <li (click)="verHistorial(selectedGanado)">
         <i class="fas fa-history"></i>
         Ver historial

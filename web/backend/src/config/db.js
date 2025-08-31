@@ -11,30 +11,48 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
+// Parse connection string to get individual components
+const connectionString = process.env.DATABASE_URL;
+
+// Log connection details (without password)
+const connectionDetails = new URL(connectionString);
+console.log('Connection details:', {
+  host: connectionDetails.hostname,
+  port: connectionDetails.port,
+  database: connectionDetails.pathname.slice(1),
+  user: connectionDetails.username
+});
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString,
   ssl: {
-    rejectUnauthorized: false // Necesario para Supabase
+    rejectUnauthorized: false
   },
-  // Configuración específica para Supabase
-  max: 20,
+  // Configuración optimizada para Supabase
+  max: 5,
+  min: 1,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-  application_name: 'trazanet_backend'
+  connectionTimeoutMillis: 10000,
+  application_name: 'trazanet_backend',
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000
 });
 
 // Connection event handlers
-pool.on('connect', () => {
+pool.on('connect', (client) => {
   console.log('New client connected to PostgreSQL');
+  client.on('error', (err) => {
+    console.error('Error en cliente PostgreSQL:', err);
+  });
 });
 
 pool.on('error', (err) => {
   console.error('Unexpected error on idle PostgreSQL client:', err);
-  // No cerramos el proceso en caso de error para permitir reintentos
   console.error('Error details:', {
     message: err.message,
     code: err.code,
-    detail: err.detail
+    detail: err.detail,
+    hint: err.hint
   });
 });
 
@@ -52,6 +70,12 @@ const testConnection = async () => {
     return true;
   } catch (error) {
     console.error('Database connection test failed:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint
+    });
     return false;
   } finally {
     if (client) {
@@ -75,12 +99,32 @@ const initializeDatabase = async () => {
 };
 
 const getClient = async () => {
-  try {
-    const client = await pool.connect();
-    return client;
-  } catch (error) {
-    console.error('Error getting database client:', error);
-    throw new Error('Database connection error');
+  let retries = 3;
+  let lastError;
+  
+  while (retries > 0) {
+    try {
+      const client = await pool.connect();
+      return client;
+    } catch (error) {
+      lastError = error;
+      console.error(`Error getting database client (${retries} retries left):`, error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        detail: error.detail,
+        hint: error.hint
+      });
+      retries--;
+      if (retries === 0) {
+        console.error('All retry attempts failed. Last error:', lastError);
+        throw new Error('Database connection error after multiple retries');
+      }
+      // Esperar tiempo exponencial entre reintentos
+      const waitTime = Math.min(1000 * Math.pow(2, 3 - retries), 5000);
+      console.log(`Waiting ${waitTime}ms before next retry...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
   }
 };
 

@@ -715,40 +715,6 @@ body:not(.dark-theme) .sidebar {
 }
 
 /* Estilos para el chat */
-.chat-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: var(--primary-green);
-  color: white;
-  border: none;
-  box-shadow: var(--shadow-lg);
-  cursor: pointer;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-
-  i {
-    font-size: 24px;
-    transition: transform 0.3s ease;
-  }
-
-  &:hover {
-    transform: scale(1.1);
-    background: var(--secondary-green);
-  }
-
-  &.active {
-    background: var(--text-primary);
-    transform: rotate(180deg);
-  }
-}
-
 .chat-container {
   position: fixed;
   bottom: 20px;
@@ -779,19 +745,85 @@ body:not(.dark-theme) .sidebar {
   }
 }
 
+/* Estilos base para los componentes del chat */
+.chat-header, 
+.chat-input {
+  background: #ffffff;
+  transition: background 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Aplicar fondo con gradiente durante la animación */
+.chat-header.show-panel-bg, 
+.chat-input.show-panel-bg {
+  background: linear-gradient(180deg, #174832  0%, #1a1c23 100%) !important;
+  color: #ffffff;
+  transition: background 0.8s cubic-bezier(0.4,0,0.2,1), color 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Panel de mensajes con fondo de animación */
+.chat-messages.show-panel-image {
+  background: linear-gradient(180deg, #174832 0%, #1a1c23 100%) !important;
+  position: relative;
+  min-height: 300px;
+  transition: background 0.8s cubic-bezier(0.4,0,0.2,1), opacity 0.8s cubic-bezier(0.4,0,0.2,1);
+  opacity: 1;
+}
+
+.chat-messages.fade-panel-image {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panel-image-animation {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  animation: fadeInPanelImage 1s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1);
+  opacity: 1;
+}
+
+.panel-image-animation.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panel-image-animation img {
+  max-width: 60%;
+  max-height: 60%;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+}
+
+@keyframes fadeInPanelImage {
+  from { opacity: 0; transform: translate(-50%, -60%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
 .chat-header {
   padding: 15px 20px;
   border-bottom: 1px solid #e0e0e0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
   border-radius: 12px 12px 0 0;
 
   h3 {
     margin: 0;
     font-size: 1.1rem;
     color: #333333;
+    transition: color 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  &.show-panel-bg h3 {
+    color: #ffffff;
   }
 
   .chat-actions {
@@ -807,7 +839,7 @@ body:not(.dark-theme) .sidebar {
     cursor: pointer;
     padding: 5px;
     border-radius: 4px;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, color 0.8s cubic-bezier(0.4,0,0.2,1);
 
     &:hover {
       background-color: #f5f5f5;
@@ -815,6 +847,15 @@ body:not(.dark-theme) .sidebar {
 
     i {
       font-size: 1rem;
+    }
+  }
+
+  &.show-panel-bg .expand-btn,
+  &.show-panel-bg .close-chat {
+    color: #ffffff;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
     }
   }
 }
@@ -827,6 +868,7 @@ body:not(.dark-theme) .sidebar {
   flex-direction: column;
   gap: 15px;
   background: #ffffff;
+  transition: background 0.8s cubic-bezier(0.4,0,0.2,1);
 }
 
 .chat-input {
@@ -834,7 +876,6 @@ body:not(.dark-theme) .sidebar {
   border-top: 1px solid #e0e0e0;
   display: flex;
   gap: 10px;
-  background: #ffffff;
   border-radius: 0 0 12px 12px;
 
   input {
@@ -845,10 +886,21 @@ body:not(.dark-theme) .sidebar {
     background: #ffffff;
     color: #333333;
     font-size: 0.9rem;
+    transition: border-color 0.2s, background-color 0.8s cubic-bezier(0.4,0,0.2,1), color 0.8s cubic-bezier(0.4,0,0.2,1);
 
     &:focus {
       outline: none;
       border-color: #28a745;
+    }
+  }
+
+  &.show-panel-bg input {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.7);
     }
   }
 
@@ -874,6 +926,18 @@ body:not(.dark-theme) .sidebar {
       cursor: not-allowed;
     }
   }
+}
+
+/* Eliminar este código redundante para evitar problemas de especificidad */
+.chat-container .chat-header,
+.chat-container .chat-input {
+  transition: background 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+.chat-container.show-panel-bg .chat-header,
+.chat-container.show-panel-bg .chat-input {
+  background: linear-gradient(180deg, #174832 0%, #1a1c23 100%) !important;
+  transition: background 0.8s cubic-bezier(0.4,0,0.2,1);
 }
 
 .resize-handle {
@@ -1656,4 +1720,1161 @@ body.dark-theme .location-panel .location-header .close-location:hover {
   @media (min-width: 1200px) {
     right: 570px;
   }
+}
+
+/* --- Leaflet Draw custom styles for location panel (mejorados) --- */
+.location-panel .leaflet-draw,
+.location-panel .leaflet-draw-toolbar,
+.location-panel .leaflet-draw-toolbar-top {
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.location-panel .leaflet-draw-toolbar a {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px !important;
+  color: #28a745 !important;
+  background: rgba(255,255,255,0.85) !important;
+  border-radius: 50% !important;
+  border: 1.5px solid #28a745 !important;
+  margin: 4px 0 0 4px !important;
+  box-shadow: 0 1px 4px rgba(40,167,69,0.10);
+  transition: all 0.2s;
+  padding: 0 !important;
+}
+.location-panel .leaflet-draw-toolbar a:hover {
+  background: #28a745 !important;
+  color: #fff !important;
+  border-color: #218838 !important;
+  transform: scale(1.08);
+}
+.location-panel .leaflet-draw-actions {
+  background: rgba(255,255,255,0.95) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(40,167,69,0.10);
+  border: 1px solid #28a745 !important;
+  padding: 4px 6px !important;
+  margin: 4px 0 0 4px !important;
+  min-width: unset;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 4px;
+}
+.location-panel .leaflet-draw-actions li {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.location-panel .leaflet-draw-actions a {
+  color: #218838 !important;
+  font-size: 13px !important;
+  font-weight: 500;
+  padding: 2px 8px !important;
+  background: none !important;
+  border: 1px solid #28a745 !important;
+  border-radius: 6px !important;
+  transition: color 0.2s, background 0.2s, border 0.2s;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  min-width: 28px;
+  min-height: 28px;
+  height: 28px;
+  line-height: 1;
+}
+.location-panel .leaflet-draw-actions a:hover {
+  color: #fff !important;
+  background: #28a745 !important;
+  border-color: #218838 !important;
+}
+.location-panel .leaflet-draw-tooltip {
+  background: rgba(255,255,255,0.98) !important;
+  color: #333 !important;
+  border-radius: 8px !important;
+  border: 1.5px solid #28a745 !important;
+  font-family: 'Poppins', 'Lato', Arial, sans-serif;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(40,167,69,0.10);
+  padding: 6px 12px !important;
+  min-width: 110px;
+  left: 40px !important;
+  top: 10px !important;
+}
+body.dark-theme .location-panel .leaflet-draw-toolbar a {
+  background: rgba(45,49,57,0.95) !important;
+  color: #28a745 !important;
+  border: 1.5px solid #43c47c !important;
+}
+body.dark-theme .location-panel .leaflet-draw-toolbar a:hover {
+  background: #28a745 !important;
+  color: #fff !important;
+  border-color: #43c47c !important;
+}
+body.dark-theme .location-panel .leaflet-draw-actions {
+  background: rgba(26,28,35,0.98) !important;
+  border: 1px solid #43c47c !important;
+}
+body.dark-theme .location-panel .leaflet-draw-actions a {
+  background: #2d3139 !important;
+  color: #43c47c !important;
+  border: 1px solid #43c47c !important;
+}
+body.dark-theme .location-panel .leaflet-draw-actions a:hover {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+/* Estilos para botones de edición y eliminación */
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-edit,
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-remove {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px !important;
+  color: #28a745 !important;
+  background: rgba(255,255,255,0.85) !important;
+  border-radius: 50% !important;
+  border: 1.5px solid #28a745 !important;
+  margin: 4px 0 0 4px !important;
+  box-shadow: 0 1px 4px rgba(40,167,69,0.10);
+  transition: all 0.2s;
+  padding: 0 !important;
+  position: relative;
+}
+
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-edit:hover,
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-remove:hover {
+  background: #28a745 !important;
+  color: #fff !important;
+  border-color: #218838 !important;
+  transform: scale(1.08);
+}
+
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-edit.leaflet-disabled,
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-remove.leaflet-disabled {
+  background: rgba(200,200,200,0.5) !important;
+  color: #999 !important;
+  border-color: #ccc !important;
+  cursor: default !important;
+  opacity: 0.7;
+}
+
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-edit.leaflet-disabled:hover,
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-remove.leaflet-disabled:hover {
+  transform: none;
+  background: rgba(200,200,200,0.5) !important;
+  color: #999 !important;
+  border-color: #ccc !important;
+}
+
+body.dark-theme .location-panel .leaflet-draw-toolbar .leaflet-draw-edit-edit,
+body.dark-theme .location-panel .leaflet-draw-toolbar .leaflet-draw-edit-remove {
+  background: rgba(45,49,57,0.95) !important;
+  color: #28a745 !important;
+  border: 1.5px solid #43c47c !important;
+}
+
+body.dark-theme .location-panel .leaflet-draw-toolbar .leaflet-draw-edit-edit:hover,
+body.dark-theme .location-panel .leaflet-draw-toolbar .leaflet-draw-edit-remove:hover {
+  background: #28a745 !important;
+  color: #fff !important;
+  border-color: #43c47c !important;
+}
+
+body.dark-theme .location-panel .leaflet-draw-toolbar .leaflet-draw-edit-edit.leaflet-disabled,
+body.dark-theme .location-panel .leaflet-draw-toolbar .leaflet-draw-edit-remove.leaflet-disabled {
+  background: rgba(50,55,65,0.5) !important;
+  color: #666 !important;
+  border-color: #444 !important;
+}
+
+body.dark-theme .location-panel .leaflet-draw-toolbar .leaflet-draw-edit-edit.leaflet-disabled:hover,
+body.dark-theme .location-panel .leaflet-draw-toolbar .leaflet-draw-edit-remove.leaflet-disabled:hover {
+  transform: none;
+  background: rgba(50,55,65,0.5) !important;
+  color: #666 !important;
+  border-color: #444 !important;
+}
+
+/* Ocultar el tooltip inicial de dibujo */
+.location-panel .leaflet-draw-tooltip-single {
+  display: none !important;
+}
+
+/* Ocultar completamente todos los tooltips de edición y dibujo */
+.location-panel .leaflet-draw-tooltip,
+.location-panel .leaflet-draw-tooltip.leaflet-edit-tooltip,
+.location-panel div.leaflet-draw-tooltip,
+.location-panel .leaflet-edit-tooltip,
+.location-panel .leaflet-tooltip {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: -999 !important;
+}
+
+/* Estilo mejorado para los botones de acciones de dibujo */
+.location-panel .leaflet-draw-section {
+  margin-top: 4px !important;
+}
+
+.location-panel .leaflet-draw-actions {
+  background: rgba(255,255,255,0.9) !important;
+  border-radius: 30px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+  border: 1px solid #28a745 !important;
+  padding: 5px 8px !important;
+  margin: 4px 0 0 4px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 6px !important;
+  align-items: center !important;
+  min-width: unset;
+  top: 0 !important;
+  left: 42px !important;
+}
+
+.location-panel .leaflet-draw-actions li {
+  margin: 0 !important;
+  display: inline-block !important;
+}
+
+.location-panel .leaflet-draw-actions a {
+  background: #f8f9fa !important;
+  color: #28a745 !important;
+  font-size: 13px !important;
+  border: 1px solid #28a745 !important;
+  border-radius: 20px !important;
+  padding: 3px 10px !important;
+  font-family: 'Poppins', 'Lato', sans-serif !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  display: inline-block !important;
+  height: auto !important;
+  line-height: 1.5 !important;
+  min-height: unset !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+.location-panel .leaflet-draw-actions a:hover {
+  background: #28a745 !important;
+  color: white !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(40,167,69,0.2) !important;
+}
+
+body.dark-theme .location-panel .leaflet-draw-actions {
+  background: rgba(45,49,57,0.9) !important;
+  border: 1px solid #43c47c !important;
+}
+
+body.dark-theme .location-panel .leaflet-draw-actions a {
+  background: #2d3139 !important;
+  color: #43c47c !important;
+  border: 1px solid #43c47c !important;
+}
+
+body.dark-theme .location-panel .leaflet-draw-actions a:hover {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+/* Ocultar tooltips de instrucciones de edición */
+.location-panel .leaflet-draw-tooltip.leaflet-edit-tooltip {
+  display: none !important;
+}
+
+/* Agregar iconos a los botones de herramientas de polígonos */
+.location-panel .leaflet-draw-toolbar .leaflet-draw-draw-polygon:before {
+  content: "\f5ee"; /* fa-draw-polygon */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  font-size: 18px;
+  color: #28a745;
+  text-shadow: 0 0 1px rgba(255,255,255,0.5);
+}
+
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-edit:before {
+  content: "\f044"; /* fa-pen-to-square */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  font-size: 18px;
+  color: #28a745;
+  text-shadow: 0 0 1px rgba(255,255,255,0.5);
+}
+
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-remove:before {
+  content: "\f2ed"; /* fa-trash-can */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  font-size: 18px;
+  color: #28a745;
+  text-shadow: 0 0 1px rgba(255,255,255,0.5);
+}
+
+/* Agregar tooltips personalizados */
+.location-panel .leaflet-draw-toolbar a {
+  position: relative;
+}
+
+.location-panel .leaflet-draw-toolbar a:after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  bottom: -30px;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.95);
+  color: #333;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  pointer-events: none;
+  font-family: 'Poppins', 'Lato', sans-serif;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #28a745;
+  z-index: 1000;
+}
+
+.location-panel .leaflet-draw-toolbar a:hover:after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Estilos para el tema oscuro */
+body.dark-theme .location-panel .leaflet-draw-toolbar a:after {
+  background: rgba(45,49,57,0.95);
+  color: #fff;
+  border-color: #43c47c;
+}
+
+/* Modificar apariencia del botón al estar activo */
+.location-panel .leaflet-draw-toolbar a.leaflet-draw-toolbar-button-enabled {
+  background: #28a745 !important;
+}
+
+.location-panel .leaflet-draw-toolbar a.leaflet-draw-toolbar-button-enabled:before {
+  color: #fff !important;
+}
+
+/* Iconos para los botones de acciones de polígonos */
+.location-panel .leaflet-draw-toolbar .leaflet-draw-draw-polygon:before {
+  content: "\f5ee"; /* fa-draw-polygon */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  font-size: 18px;
+  color: #28a745;
+  text-shadow: 0 0 1px rgba(255,255,255,0.5);
+}
+
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-edit:before {
+  content: "\f044"; /* fa-pen-to-square */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  font-size: 18px;
+  color: #28a745;
+  text-shadow: 0 0 1px rgba(255,255,255,0.5);
+}
+
+.location-panel .leaflet-draw-toolbar .leaflet-draw-edit-remove:before {
+  content: "\f2ed"; /* fa-trash-can */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  font-size: 18px;
+  color: #28a745;
+  text-shadow: 0 0 1px rgba(255,255,255,0.5);
+}
+
+/* Iconos para los botones de acciones */
+.location-panel .leaflet-draw-actions a[title="Finish"]:before {
+  content: "\f00c"; /* fa-check */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  margin-right: 5px;
+  font-size: 12px;
+}
+
+.location-panel .leaflet-draw-actions a[title="Delete last point drawn"]:before {
+  content: "\f12d"; /* fa-eraser */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  margin-right: 5px;
+  font-size: 12px;
+}
+
+.location-panel .leaflet-draw-actions a[title="Cancel drawing"]:before,
+.location-panel .leaflet-draw-actions a[title="Cancel editing"]:before,
+.location-panel .leaflet-draw-actions a[title="Cancel"]:before {
+  content: "\f00d"; /* fa-xmark */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  margin-right: 5px;
+  font-size: 12px;
+}
+
+.location-panel .leaflet-draw-actions a[title="Save changes"]:before {
+  content: "\f0c7"; /* fa-floppy-disk */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  display: inline-block;
+  margin-right: 5px;
+  font-size: 12px;
+}
+
+/* Ocultar texto original en botones de la barra principal (solo mostrar iconos) */
+.location-panel .leaflet-draw-toolbar a span.sr-only {
+  display: none;
+}
+
+/* Agregar tooltips personalizados */
+.location-panel .leaflet-draw-toolbar a {
+  position: relative;
+}
+
+.location-panel .leaflet-draw-toolbar a:after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  bottom: -30px;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.95);
+  color: #333;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  pointer-events: none;
+  font-family: 'Poppins', 'Lato', sans-serif;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #28a745;
+  z-index: 1000;
+}
+
+.location-panel .leaflet-draw-toolbar a:hover:after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Estilos para el tema oscuro */
+body.dark-theme .location-panel .leaflet-draw-toolbar a:after {
+  background: rgba(45,49,57,0.95);
+  color: #fff;
+  border-color: #43c47c;
+}
+
+/* Modificar apariencia del botón al estar activo */
+.location-panel .leaflet-draw-toolbar a.leaflet-draw-toolbar-button-enabled {
+  background: #28a745 !important;
+}
+
+.location-panel .leaflet-draw-toolbar a.leaflet-draw-toolbar-button-enabled:before {
+  color: #fff !important;
+}
+
+/* Estilos para el botón de minimizar controles de dibujo */
+.toggle-draw-controls {
+  position: absolute;
+  top: 150px;
+  left: 15px;
+  width: 36px;
+  height: 36px;
+  background: #8e8c82 !important;
+  border-radius: 50% !important;
+  border: 1.5px solid #969792 !important;
+  color: #ffffff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(40,167,69,0.15);
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.2s ease;
+  padding: 0;
+  position: relative;
+}
+
+.toggle-draw-controls:hover {
+  background: #28a745 !important;
+  color: #fff !important;
+  transform: scale(1.05);
+  box-shadow: 0 3px 10px rgba(40,167,69,0.25);
+}
+
+.toggle-draw-controls i {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.toggle-draw-controls .fa-angle-down {
+  transform: rotate(0deg);
+}
+
+.toggle-draw-controls:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  bottom: -35px;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.95);
+  color: #333;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 1;
+  visibility: visible;
+  font-family: 'Poppins', 'Lato', sans-serif;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #28a745;
+  z-index: 1000;
+}
+
+body.dark-theme .toggle-draw-controls:hover::after {
+  background: rgba(45,49,57,0.95);
+  color: #fff;
+  border-color: #43c47c;
+}
+
+/* Estado oculto para los controles de dibujo */
+.hidden-draw-controls {
+  display: none !important;
+}
+
+/* Estado oculto para los controles de dibujo en tema oscuro */
+body.dark-theme .toggle-draw-controls {
+  background: rgba(45,49,57,0.95) !important;
+  color: #43c47c !important;
+  border: 1.5px solid #43c47c !important;
+}
+
+body.dark-theme .toggle-draw-controls:hover {
+  background: #28a745 !important;
+  color: #fff !important;
+  border-color: #43c47c !important;
+}
+
+/* Reposicionamiento del contenedor de herramientas de dibujo */
+.location-panel .leaflet-draw.leaflet-control {
+  position: absolute !important;
+  top: 190px !important; /* Alineado con el botón toggle-draw-controls */
+  left: 13px !important;
+  margin: 0 !important;
+  z-index: 999 !important;
+}
+
+/* Ajuste para la posición de las acciones del dibujo */
+.location-panel .leaflet-draw-actions {
+  position: absolute;
+  top: 0 !important;
+  left: 42px !important;
+}
+
+/* Panel de acciones de dibujo más compacto y con iconos */
+.location-panel .leaflet-draw-actions {
+  position: absolute;
+  top: 0 !important;
+  left: 42px !important;
+  background: rgba(255,255,255,0.95) !important;
+  border-radius: 30px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+  border: 1px solid #28a745 !important;
+  padding: 5px !important;
+  margin: 4px 0 0 4px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 3px !important;
+  align-items: center !important;
+  min-width: unset;
+}
+
+.location-panel .leaflet-draw-actions li {
+  margin: 0 !important;
+  display: inline-block !important;
+}
+
+.location-panel .leaflet-draw-actions a {
+  background: rgba(255,255,255,0.5) !important;
+  color: #28a745 !important;
+  font-size: 14px !important;
+  border: 1px solid #28a745 !important;
+  border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
+  font-family: 'Poppins', 'Lato', sans-serif !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: unset !important;
+  position: relative;
+}
+
+.location-panel .leaflet-draw-actions a:hover {
+  background: #28a745 !important;
+  color: white !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(40,167,69,0.2) !important;
+}
+
+/* Reemplazar textos por iconos */
+.location-panel .leaflet-draw-actions a[title="Finish"]::before {
+  content: "\f00c"; /* Check (✓) */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.location-panel .leaflet-draw-actions a[title="Delete last point drawn"]::before {
+  content: "\f0e2"; /* Undo (↩) */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  font-size: 14px; 
+}
+
+.location-panel .leaflet-draw-actions a[title="Cancel drawing"]::before,
+.location-panel .leaflet-draw-actions a[title="Cancel editing"]::before,
+.location-panel .leaflet-draw-actions a[title="Cancel"]::before {
+  content: "\f00d"; /* Times (×) */
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  font-size: 14px;
+}
+
+/* Ocultar el texto original */
+.location-panel .leaflet-draw-actions a span,
+.location-panel .leaflet-draw-actions a {
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+
+/* Tema oscuro */
+body.dark-theme .location-panel .leaflet-draw-actions {
+  background: rgba(45,49,57,0.95) !important;
+  border: 1px solid #43c47c !important;
+}
+
+body.dark-theme .location-panel .leaflet-draw-actions a {
+  background: rgba(45,49,57,0.7) !important;
+  color: #43c47c !important;
+  border: 1px solid #43c47c !important;
+}
+
+body.dark-theme .location-panel .leaflet-draw-actions a:hover {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+/* Tooltip mejorado para botones de acción */
+.location-panel .leaflet-draw-actions a::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  bottom: -25px;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.95);
+  color: #333;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  pointer-events: none;
+  font-family: 'Poppins', 'Lato', sans-serif;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #28a745;
+  z-index: 1000;
+}
+
+.location-panel .leaflet-draw-actions a:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+body.dark-theme .location-panel .leaflet-draw-actions a::after {
+  background: rgba(45,49,57,0.95);
+  color: #fff;
+  border-color: #43c47c;
+}
+
+.chat-messages.show-panel-image {
+  background: linear-gradient(180deg, #174832 0%, #1a1c23 100%) !important;
+  position: relative;
+  min-height: 300px;
+  transition: background 0.8s cubic-bezier(0.4,0,0.2,1), opacity 0.8s cubic-bezier(0.4,0,0.2,1);
+  opacity: 1;
+}
+
+.chat-messages.fade-panel-image {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panel-image-animation {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  animation: fadeInPanelImage 1s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1);
+  opacity: 1;
+}
+
+.panel-image-animation.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panel-image-animation img {
+  max-width: 60%;
+  max-height: 60%;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+}
+
+@keyframes fadeInPanelImage {
+  from { opacity: 0; transform: translate(-50%, -60%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+/* Estilos para el chat con header flotante */
+.chat-header.floating-header {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 10;
+  padding: 15px 20px;
+  border-bottom: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border-radius: 12px;
+  height: 60px;
+  min-height: 60px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  margin: 0;
+  width: auto;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.chat-header.floating-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #333 !important;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-family: 'Poppins', 'Lato', Arial, sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+.chat-header.floating-header.show-panel-bg {
+  background: rgba(15, 28, 32, 0.8) !important;
+  border: 1px solid rgba(26, 28, 35, 0.3) !important;
+}
+
+.chat-header.floating-header.show-panel-bg h3 {
+  color: #fff !important;
+  text-shadow: 0 2px 8px rgba(40, 167, 69, 0.18), 0 1px 2px rgba(0,0,0,0.18);
+}
+
+.chat-header.floating-header .chat-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 2;
+}
+
+.chat-header.floating-header .expand-chat,
+.chat-header.floating-header .close-chat {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #333333;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+.chat-header.floating-header .expand-chat {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}
+
+.chat-header.floating-header .expand-chat:hover,
+.chat-header.floating-header .close-chat:hover {
+  background-color: rgba(255, 255, 255, 0.4) !important;
+  color: #28a745;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chat-header.floating-header.show-panel-bg .expand-chat,
+.chat-header.floating-header.show-panel-bg .close-chat {
+  background: rgba(45,49,57,0.4) !important;
+  border: 1px solid rgba(60, 64, 75, 0.5) !important;
+  color: #fff;
+}
+
+.chat-header.floating-header.show-panel-bg .expand-chat:hover,
+.chat-header.floating-header.show-panel-bg .close-chat:hover {
+  background-color: rgba(45,49,57,0.6) !important;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Ajustar el espacio en el contenedor de chat para el header flotante */
+.chat-container .chat-messages {
+  margin-top: 70px;
+  border-radius: 16px;
+}
+
+/* Reducir el margen superior cuando el chat está expandido */
+.chat-container.expanded .chat-messages {
+  margin-top: 40px;
+}
+
+/* Estilos para el input de chat flotante - versión compacta */
+.chat-input.floating-input {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 10;
+  padding: 8px 12px;
+  border-top: none;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  width: calc(100% - 20px);
+  max-width: 90%;
+  margin: 0 auto;
+}
+
+.chat-input.floating-input input {
+  flex: 1;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #333333;
+  font-size: 0.9rem;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.chat-input.floating-input input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.chat-input.floating-input input::placeholder {
+  color: rgba(51, 51, 51, 0.7);
+}
+
+.chat-input.floating-input .send-btn {
+  background: rgba(40, 167, 69, 0.85);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.chat-input.floating-input .send-btn i {
+  font-size: 0.9rem;
+}
+
+.chat-input.floating-input .send-btn:hover {
+  background: #28a745;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(40, 167, 69, 0.3);
+}
+
+.chat-input.floating-input .send-btn:disabled {
+  background: rgba(204, 204, 204, 0.7);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.chat-input.floating-input.show-panel-bg {
+  background: rgba(15, 28, 32, 0.8) !important;
+  border: 1px solid rgba(26, 28, 35, 0.3) !important;
+}
+
+.chat-input.floating-input.show-panel-bg input {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.chat-input.floating-input.show-panel-bg input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Ajustar el espacio en el contenedor de mensajes para el input flotante */
+.chat-container .chat-messages {
+  padding-bottom: 65px;
+  margin-bottom: 0;
+}
+
+/* Estilos del contenedor principal durante la animación */
+.chat-container.show-panel-bg {
+  background: linear-gradient(180deg, #174832 0%, #1a1c23 100%) !important;
+  border-color: rgba(26, 28, 35, 0.5) !important;
+  transition: background 0.8s cubic-bezier(0.4,0,0.2,1), border-color 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Asegurar que todos los elementos dentro del contenedor tengan un fondo transparente 
+   cuando el contenedor principal tiene el fondo de la animación */
+.chat-container.show-panel-bg .chat-messages {
+  background: transparent !important;
+}
+
+.chat-container.show-panel-bg .chat-header.floating-header {
+  background: rgba(15, 28, 32, 0.6) !important;
+  border: 1px solid rgba(26, 28, 35, 0.4) !important;
+}
+
+.chat-container.show-panel-bg .chat-input.floating-input {
+  background: rgba(15, 28, 32, 0.6) !important;
+  border: 1px solid rgba(26, 28, 35, 0.4) !important;
+}
+
+/* Animaciones para la aparición de los controles flotantes */
+@keyframes fadeInFloatingHeader {
+  from { 
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInFloatingInput {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-header.floating-header {
+  animation: fadeInFloatingHeader 0.3s ease-out;
+}
+
+.chat-input.floating-input {
+  animation: fadeInFloatingInput 0.3s ease-out;
+}
+
+/* Reducir el margen superior aún más cuando el chat está expandido */
+.chat-container.expanded .chat-messages {
+  margin-top: 16px;
+}
+
+.panel-image-animation.panel-image-final {
+  top: 44%; /* sube la imagen después de la animación */
+  transition: top 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Durante la animación, el gradiente cubre todo el panel y los hijos son transparentes */
+.chat-container.show-panel-bg .chat-header,
+.chat-container.show-panel-bg .chat-messages,
+.chat-container.show-panel-bg .chat-input {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Gradiente cubre todo el panel durante la animación */
+.chat-container.show-panel-bg {
+  background: linear-gradient(135deg, #1b3e31, #263238) !important;
+  transition: background 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+.chat-container.show-panel-bg .chat-header,
+.chat-container.show-panel-bg .chat-messages,
+.chat-container.show-panel-bg .chat-input {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Al terminar la animación, los hijos recuperan su fondo blanco */
+.chat-container:not(.show-panel-bg) .chat-header,
+.chat-container:not(.show-panel-bg) .chat-messages,
+.chat-container:not(.show-panel-bg) .chat-input {
+  background: #fff;
+}
+
+/* Gradiente AGRESIVO: cubre todo el panel durante la animación */
+.chat-container.show-panel-bg {
+  background: linear-gradient(135deg, #1b3e31 0%, #263238 100%) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25) !important;
+  border: none !important;
+  transition: background 0.8s cubic-bezier(0.4,0,0.2,1), box-shadow 0.8s, border 0.8s;
+}
+
+.chat-container.show-panel-bg .chat-header,
+.chat-container.show-panel-bg .chat-messages,
+.chat-container.show-panel-bg .chat-input {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+/* Al terminar la animación, los hijos recuperan su fondo, borde y sombra normales */
+.chat-container:not(.show-panel-bg) .chat-header,
+.chat-container:not(.show-panel-bg) .chat-messages,
+.chat-container:not(.show-panel-bg) .chat-input {
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  border-radius: 12px;
+  color: #333;
+}
+
+/* Gradiente solo al contenedor principal */
+.chat-container.gradient-bg {
+  background: linear-gradient(135deg, #1b3e31, #263238) !important;
+  color: #f5f6fa;
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Los hijos no deben tapar el gradiente */
+.chat-container.gradient-bg .chat-header,
+.chat-container.gradient-bg .chat-messages,
+.chat-container.gradient-bg .chat-input {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  color: #f5f6fa !important;
+}
+
+.location-panel.show-panel-bg {
+  background: linear-gradient(135deg, #40C4FF 0%, #263238 100%) !important;
+  transition: background 0.8s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25) !important;
+  border: none !important;
+}
+.location-panel.show-panel-bg .location-header,
+.location-panel.show-panel-bg .location-content {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  color: #263238 !important;
+}
+.location-panel .panel-image-animation {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1);
+  opacity: 1;
+  pointer-events: none;
+}
+.location-panel .panel-image-animation img {
+  max-width: 60%;
+  max-height: 60%;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+}
+.location-panel .fade-panel-image {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1);
 }

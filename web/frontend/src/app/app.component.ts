@@ -10,6 +10,7 @@ import { ChatService, ChatMessage } from './services/chat.service';
 import * as XLSX from 'xlsx';
 import { ThemeService } from './services/theme.service';
 import * as L from 'leaflet';
+import 'leaflet-draw';
 
 @Component({
   selector: 'app-root',
@@ -49,6 +50,13 @@ export class AppComponent implements OnInit, AfterViewChecked {
   fabActive = false;
   showChatButton = false;
   showLocationPanel = false;
+  showDrawControls = true;
+  showPanelImage = false;
+  showFloatingControls = true;
+  showLocationPanelAnimation = false;
+  typingMessage: string = '';
+  hasAnimatedChatPanel: boolean = false;
+  hasAnimatedLocationPanel: boolean = false;
 
   @ViewChild('chatMessages') private chatMessages!: ElementRef;
   @ViewChild('map') mapContainer?: ElementRef;
@@ -249,8 +257,43 @@ export class AppComponent implements OnInit, AfterViewChecked {
 
   toggleChat() {
     this.showChat = !this.showChat;
-    if (!this.showChat) {
+    
+    if (this.showChat) {
+      if (!this.hasAnimatedChatPanel) {
+        this.hasAnimatedChatPanel = true;
+        // Ocultar los controles flotantes durante la animación
+        this.showFloatingControls = false;
+        // Al abrir el chat, iniciar animación con fondo y gradiente
+        this.showPanelImage = true;
+        // Esperar 1.5 segundos y luego iniciar desvanecimiento
+        setTimeout(() => {
+          const chatContainer = document.querySelector('.chat-container') as HTMLElement;
+          const chatHeader = document.querySelector('.chat-header') as HTMLElement;
+          const chatMessages = document.querySelector('.chat-messages') as HTMLElement;
+          const chatInput = document.querySelector('.chat-input') as HTMLElement;
+          const panelImage = document.querySelector('.panel-image-animation') as HTMLElement;
+          // Agregar clases para el desvanecimiento suave
+          if (chatMessages) chatMessages.classList.add('fade-panel-image');
+          if (panelImage) panelImage.classList.add('fade-out');
+          // Esperar a que termine la animación de desvanecimiento (0.8s)
+          // y luego quitar todas las clases
+          setTimeout(() => {
+            this.showPanelImage = false;
+            // Eliminar todas las clases de transición
+            if (chatMessages) chatMessages.classList.remove('fade-panel-image');
+            if (panelImage) panelImage.classList.remove('fade-out');
+            // Mostrar los controles flotantes después de que termine la animación
+            this.showFloatingControls = true;
+          }, 800);
+        }, 1500);
+      } else {
+        // Si ya se animó, mostrar el panel directamente
+        this.showPanelImage = false;
+        this.showFloatingControls = true;
+      }
+    } else {
       this.showChatButton = false;
+      this.showFloatingControls = true; // Reset para la próxima apertura
     }
   }
 
@@ -272,15 +315,22 @@ export class AppComponent implements OnInit, AfterViewChecked {
     try {
       // Preparar el historial de mensajes para enviar al backend
       const messageHistory = this.messages.map(({ role, content }) => ({ role, content }));
-      
       // Enviar mensaje al backend
       const response = await this.chatService.sendMessage(messageHistory).toPromise();
-      
       if (response) {
+        // Efecto máquina de escribir
+        this.typingMessage = '';
+        const fullText = response.content;
+        for (let i = 0; i < fullText.length; i++) {
+          this.typingMessage += fullText[i];
+          await new Promise(res => setTimeout(res, 20));
+        }
         this.messages.push({
           ...response,
+          content: this.typingMessage,
           timestamp: new Date()
         });
+        this.typingMessage = '';
       }
     } catch (error) {
       console.error('Error al procesar el mensaje:', error);
@@ -343,13 +393,27 @@ export class AppComponent implements OnInit, AfterViewChecked {
 
   toggleLocationPanel() {
     this.showLocationPanel = !this.showLocationPanel;
-    
-    // Hide FAB when location panel is open, show when closed
-    this.fabActive = false; // Always close the FAB menu when toggling
-    
+    this.fabActive = false;
     if (this.showLocationPanel) {
-      // Allow DOM to update before initializing map
-      setTimeout(() => this.initMap(), 100);
+      if (!this.hasAnimatedLocationPanel) {
+        this.hasAnimatedLocationPanel = true;
+        this.showLocationPanelAnimation = true;
+        setTimeout(() => {
+          const locationContent = document.querySelector('.location-panel .location-content') as HTMLElement;
+          const panelImage = document.querySelector('.location-panel .panel-image-animation') as HTMLElement;
+          if (locationContent) locationContent.classList.add('fade-panel-image');
+          if (panelImage) panelImage.classList.add('fade-out');
+          setTimeout(() => {
+            this.showLocationPanelAnimation = false;
+            if (locationContent) locationContent.classList.remove('fade-panel-image');
+            if (panelImage) panelImage.classList.remove('fade-out');
+            setTimeout(() => this.initMap(), 100);
+          }, 800);
+        }, 1500);
+      } else {
+        this.showLocationPanelAnimation = false;
+        setTimeout(() => this.initMap(), 100);
+      }
     } else {
       this.destroyMap();
     }
@@ -411,6 +475,73 @@ export class AppComponent implements OnInit, AfterViewChecked {
           collapsed: true
         }).addTo(map);
         
+        // --- Leaflet Draw ---
+        const drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+        const drawControl = new (L.Control as any).Draw({
+          edit: {
+            featureGroup: drawnItems,
+            edit: {
+              selectedPathOptions: {
+                maintainColor: true,
+                opacity: 0.3
+              }
+            }
+          },
+          draw: {
+            polygon: {
+              allowIntersection: false,
+              showArea: true,
+              drawError: {
+                color: '#e1e100',
+                message: '<strong>Error:</strong> ¡Los bordes no pueden cruzarse!'
+              },
+              shapeOptions: {
+                color: '#28a745',
+                fillColor: '#28a745',
+                fillOpacity: 0.2
+              },
+              showLength: true,
+              metric: true,
+              feet: false,
+              nautic: false,
+              showTooltip: false
+            },
+            polyline: false,
+            rectangle: false,
+            circle: false,
+            marker: false,
+            circlemarker: false
+          }
+        });
+        map.addControl(drawControl);
+        
+        // Eventos para manejar los estados de dibujo
+        map.on(L.Draw.Event.CREATED, (event: any) => {
+          const layer = event.layer;
+          drawnItems.addLayer(layer);
+          // Aquí puedes manejar el polígono dibujado, por ejemplo:
+          if (event.layerType === 'polygon') {
+            const latlngs = layer.getLatLngs();
+            console.log('Polígono dibujado:', latlngs);
+          }
+        });
+        
+        // Monitorear cambios en las herramientas de dibujo
+        map.on('draw:drawstart', () => {
+          this.makeActionsCollapsible();
+        });
+        
+        map.on('draw:editstart', () => {
+          this.makeActionsCollapsible();
+        });
+        
+        map.on('draw:deletestart', () => {
+          this.makeActionsCollapsible();
+        });
+        
+        // --- END Leaflet Draw ---
+        
         // Añadir marcador en Montevideo
         const montevideoCoords: L.LatLngExpression = [-34.9011, -56.1645]; // Especificar como LatLngExpression
         
@@ -429,6 +560,92 @@ export class AppComponent implements OnInit, AfterViewChecked {
     }
   }
 
+  /**
+   * Hace que el panel de acciones de dibujo sea colapsable y solo expande el de la herramienta activa
+   */
+  private makeActionsCollapsible() {
+    setTimeout(() => {
+      // 1. Detectar el botón de herramienta activo
+      const toolbar = document.querySelector('.location-panel .leaflet-draw-toolbar');
+      if (!toolbar) return;
+      const activeButton = toolbar.querySelector('.leaflet-draw-toolbar-button-enabled');
+
+      // 2. Obtener todos los paneles de acciones
+      const actionPanels = document.querySelectorAll('.location-panel .leaflet-draw-actions');
+      actionPanels.forEach((panel) => {
+        const panelEl = panel as HTMLElement;
+        // Solo agregar el botón si no existe ya
+        let toggleButton = panelEl.querySelector('.actions-toggle') as HTMLElement | null;
+        if (!toggleButton) {
+          // Crear botón de colapsar/expandir
+          toggleButton = document.createElement('button');
+          toggleButton.className = 'actions-toggle';
+          toggleButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
+          toggleButton.title = 'Colapsar panel';
+
+          // Agregar comportamiento de click
+          toggleButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (panelEl.classList.contains('expanded')) {
+              panelEl.classList.remove('expanded');
+              panelEl.classList.add('collapsed');
+              toggleButton!.innerHTML = '<i class="fas fa-chevron-right"></i>';
+              toggleButton!.title = 'Expandir panel';
+            } else {
+              panelEl.classList.remove('collapsed');
+              panelEl.classList.add('expanded');
+              toggleButton!.innerHTML = '<i class="fas fa-chevron-left"></i>';
+              toggleButton!.title = 'Colapsar panel';
+            }
+          });
+          // Insertar el botón al principio del panel
+          panelEl.insertBefore(toggleButton, panelEl.firstChild);
+        }
+        // Asegurarse de que el panel sea colapsable
+        panelEl.classList.add('expandable-actions');
+      });
+
+      // 3. Colapsar todos los paneles excepto el de la herramienta activa
+      if (activeButton) {
+        // Buscar el panel de acciones correspondiente al botón activo
+        // El panel de acciones suele estar justo después del botón en el DOM
+        actionPanels.forEach((panel) => {
+          const panelEl = panel as HTMLElement;
+          // Buscar el botón anterior a este panel
+          let isForActive = false;
+          let prev = panelEl.previousElementSibling;
+          while (prev) {
+            if (prev === activeButton) {
+              isForActive = true;
+              break;
+            }
+            // Si hay otro panel de acciones antes, paramos
+            if (prev.classList.contains('leaflet-draw-actions')) break;
+            prev = prev.previousElementSibling;
+          }
+          if (isForActive) {
+            panelEl.classList.add('expanded');
+            panelEl.classList.remove('collapsed');
+            const btn = panelEl.querySelector('.actions-toggle');
+            if (btn) {
+              btn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+              btn.setAttribute('title', 'Colapsar panel');
+            }
+          } else {
+            panelEl.classList.remove('expanded');
+            panelEl.classList.add('collapsed');
+            const btn = panelEl.querySelector('.actions-toggle');
+            if (btn) {
+              btn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+              btn.setAttribute('title', 'Expandir panel');
+            }
+          }
+        });
+      }
+    }, 100);
+  }
+
   private destroyMap() {
     if (this.leafletMap) {
       console.log('Destroying map...');
@@ -443,5 +660,18 @@ export class AppComponent implements OnInit, AfterViewChecked {
     
     // Toggle del panel de ubicación (si está abierto, lo cierra; si está cerrado, lo abre)
     this.toggleLocationPanel();
+  }
+
+  toggleDrawControls() {
+    this.showDrawControls = !this.showDrawControls;
+    const drawControlsElement = document.querySelector('.location-panel .leaflet-draw');
+    
+    if (drawControlsElement) {
+      if (this.showDrawControls) {
+        drawControlsElement.classList.remove('hidden-draw-controls');
+      } else {
+        drawControlsElement.classList.add('hidden-draw-controls');
+      }
+    }
   }
 }

@@ -8,6 +8,7 @@ import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { HistorialAnimalComponent } from '../historial-animal/historial-animal.component';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import * as L from 'leaflet';
 
 Chart.register(...registerables);
 
@@ -75,6 +76,8 @@ export class MiGanadoComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('medidas3DContainer') medidas3DContainer!: ElementRef<HTMLDivElement>;
   @ViewChild('estadoChart') estadoChart!: ElementRef<HTMLCanvasElement>;
   @ViewChild('campoChartCanvas') campoChartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('animalMapContainer') animalMapContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('profitChart') profitChart!: ElementRef<HTMLCanvasElement>;
 
   ganado: Ganado[] = [];
   filteredGanado: Ganado[] = [];
@@ -90,7 +93,7 @@ export class MiGanadoComponent implements OnInit, AfterViewInit, OnDestroy {
   isBrowser: boolean = false;
   editingField: { id: string; field: keyof Ganado } | null = null;
   showChartPanel: boolean = false;
-  chartType: 'weight' | 'performance' | 'individual' = 'weight';
+  chartType: 'weight' | 'performance' | 'individual' | 'detalles' = 'weight';
   selectedAnimal: Ganado | null = null;
   private charts: { [key: string]: Chart | null } = {
     weight: null,
@@ -101,6 +104,7 @@ export class MiGanadoComponent implements OnInit, AfterViewInit, OnDestroy {
   showHistorial: boolean = false;
   selectedAnimalForHistorial: Ganado | null = null;
   private campoChartInstance: Chart | null = null;
+  showProfitChart: boolean = false;
 
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
@@ -108,6 +112,9 @@ export class MiGanadoComponent implements OnInit, AfterViewInit, OnDestroy {
   private controls!: OrbitControls;
   private medidas3DObject!: THREE.Group;
   private animationFrameId: number | null = null;
+
+  private animalMap?: L.Map;
+  private profitChartInstance: Chart | null = null;
 
   contextMenuItems = [
     {
@@ -161,6 +168,15 @@ export class MiGanadoComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.showChartPanel) {
       this.initializeAllCharts();
     }
+    this.initProfitChartIfNeeded();
+  }
+
+  ngOnChanges(): void {
+    this.initProfitChartIfNeeded();
+  }
+
+  ngDoCheck(): void {
+    this.initProfitChartIfNeeded();
   }
 
   ngOnDestroy(): void {
@@ -171,6 +187,10 @@ export class MiGanadoComponent implements OnInit, AfterViewInit, OnDestroy {
       this.renderer.dispose();
     }
     this.destroyAllCharts();
+    if (this.animalMap) {
+      this.animalMap.remove();
+      this.animalMap = undefined;
+    }
   }
 
   private generateHistoriales(peso: number, altura: number, circunferencia: number) {
@@ -645,9 +665,13 @@ export class MiGanadoComponent implements OnInit, AfterViewInit, OnDestroy {
 
   verDetalles(animal: Ganado | null): void {
     if (!animal) return;
-    // Implementar lógica para ver detalles
-    console.log('Ver detalles de:', animal);
+    this.selectedAnimal = animal;
+    this.chartType = 'detalles';
+    this.showChartPanel = true;
     this.hideContextMenu();
+    setTimeout(() => {
+      this.initializeAnimalMap();
+    }, 400);
   }
 
   verHistorial(animal: Ganado | null): void {
@@ -704,12 +728,13 @@ export class MiGanadoComponent implements OnInit, AfterViewInit, OnDestroy {
 
   showAnimalPerformance(animal: Ganado | null): void {
     if (!animal) return;
-    
     this.selectedAnimal = animal;
+    this.chartType = 'performance';
     this.showChartPanel = true;
     this.hideContextMenu();
     setTimeout(() => {
       this.initializeAllCharts();
+      this.initializeAnimalMap();
     }, 400);
   }
 
@@ -1377,5 +1402,112 @@ export class MiGanadoComponent implements OnInit, AfterViewInit, OnDestroy {
       return 'Vaca';
     }
     return '-';
+  }
+
+  private initializeAnimalMap(): void {
+    if (!this.isBrowser || !this.animalMapContainer) return;
+    // Destruir mapa anterior si existe
+    if (this.animalMap) {
+      this.animalMap.remove();
+      this.animalMap = undefined;
+    }
+    const container = this.animalMapContainer.nativeElement;
+    // Asegurarse de que el contenedor esté vacío
+    container.innerHTML = '';
+    // Inicializar mapa con configuración similar al principal
+    this.animalMap = L.map(container, {
+      center: [-34.9011, -56.1645], // Puedes ajustar según la ubicación del animal
+      zoom: 12,
+      zoomControl: true,
+      attributionControl: false,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      fadeAnimation: true,
+      zoomAnimation: true,
+      markerZoomAnimation: true
+    });
+    const mainTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '',
+      maxZoom: 19
+    });
+    const satelliteTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '',
+      maxZoom: 19
+    }).addTo(this.animalMap);
+    const baseMaps = {
+      "Satélite": satelliteTileLayer,
+      "Mapa": mainTileLayer
+    };
+    L.control.layers(baseMaps, {}, {
+      position: 'topright',
+      collapsed: true
+    }).addTo(this.animalMap);
+    // Si el animal tiene ubicación, centrar y marcar
+    if (this.selectedAnimal && this.selectedAnimal.ubicacion) {
+      // Suponiendo que ubicacion es 'lat,lng'
+      const coords = this.selectedAnimal.ubicacion.split(',').map(Number);
+      if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        this.animalMap.setView([coords[0], coords[1]], 15);
+        L.marker([coords[0], coords[1]]).addTo(this.animalMap)
+          .bindPopup(`${this.selectedAnimal.identificacion}`)
+          .openPopup();
+      }
+    }
+    setTimeout(() => {
+      this.animalMap?.invalidateSize();
+    }, 300);
+  }
+
+  private initProfitChartIfNeeded(): void {
+    if (this.showProfitChart && this.profitChart && this.profitChart.nativeElement) {
+      this.updateProfitChart();
+    } else if (this.profitChartInstance) {
+      this.profitChartInstance.destroy();
+      this.profitChartInstance = null;
+    }
+  }
+
+  updateProfitChart(): void {
+    if (!this.profitChart || !this.isBrowser) return;
+    const ctx = this.profitChart.nativeElement.getContext('2d');
+    if (!ctx) return;
+    if (this.profitChartInstance) {
+      this.profitChartInstance.destroy();
+    }
+    // Ejemplo de datos de rentabilidad
+    const labels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
+    const data = [120, 150, 180, 130, 170, 200];
+    this.profitChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Rentabilidad ($)',
+          data: data,
+          backgroundColor: 'rgba(255, 193, 7, 0.7)',
+          borderColor: 'rgba(255, 193, 7, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Rentabilidad ($)', font: { weight: 'bold' } }
+          },
+          x: {
+            title: { display: false }
+          }
+        }
+      }
+    });
   }
 } 

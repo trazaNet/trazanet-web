@@ -93,6 +93,8 @@ export class AuthService {
 
   login(credentials: LoginCredentials): Observable<AuthResponse> {
     console.log('Intentando iniciar sesión:', credentials);
+    
+    // Primero intentar con el backend
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
       tap(response => {
         console.log('Respuesta del login:', response);
@@ -102,6 +104,13 @@ export class AuthService {
       }),
       catchError((error: HttpErrorResponse) => {
         console.error('Error completo:', error);
+        
+        // Si el backend no está disponible (error de conexión), usar mockLogin
+        if (error.status === 0 || error.status === 500) {
+          console.log('Backend no disponible, usando autenticación mock');
+          return this.mockLogin(credentials);
+        }
+        
         let errorMessage = 'Error interno del servidor';
         
         if (error.error instanceof ErrorEvent) {
@@ -119,10 +128,34 @@ export class AuthService {
 
   // Método de simulación para desarrollo
   mockLogin(credentials: { email: string; password: string }): Observable<AuthResponse> {
-    // Para propósitos de desarrollo/pruebas
-    if (credentials.email === 'test@example.com' && credentials.password === 'password') {
+    // Usuario administrador hardcodeado
+    if (credentials.email === 'admin@mail.com' && credentials.password === 'admin123') {
       const mockUser = {
         id: 1,
+        email: 'admin@mail.com',
+        dicose: 'ADMIN001',
+        phone: '099123456',
+        is_active: true,
+        is_admin: true
+      };
+      
+      const mockResponse = {
+        user: mockUser,
+        token: 'mock-admin-token-' + Date.now()
+      };
+      
+      return of(mockResponse).pipe(
+        tap(response => {
+          this.setAuthData(response);
+          this.router.navigate(['/inicio']);
+        })
+      );
+    }
+    
+    // Usuario de prueba regular
+    if (credentials.email === 'test@example.com' && credentials.password === 'password') {
+      const mockUser = {
+        id: 2,
         email: 'test@example.com',
         dicose: '12345',
         phone: '099123456',
