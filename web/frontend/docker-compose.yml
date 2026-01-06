@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    # Para desarrollo usamos npm start, para prod el Dockerfile usa Nginx
+    command: npm start -- --host 0.0.0.0 --port 80
