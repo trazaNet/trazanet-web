@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://your-backend-url.vercel.app/api'
+  apiUrl: 'https://trazanet-api.onrender.com/api'
 }; 
