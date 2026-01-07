@@ -56,25 +56,15 @@ export class AuthService {
     return token ? token : null;
   }
 
-  register(userData: Omit<User, 'id' | 'role'>): Observable<AuthResponse> {
+  register(userData: User): Observable<AuthResponse> {
     console.log('Intentando registrar usuario:', userData);
 
-    // Usar el endpoint de users para registro
-    return this.http.post<User>(`${this.apiUrl}/users/`, userData)
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData)
       .pipe(
-        map(user => {
-          // Generar un token temporal
-          const tempToken = btoa(user.email + ':' + Date.now());
-          return {
-            user,
-            token: tempToken
-          };
-        }),
         tap((response: AuthResponse) => {
           console.log('Respuesta del registro:', response);
           if (response.token) {
             this.setAuthData(response);
-            this.router.navigate(['/login']);
           }
         }),
         catchError((error: HttpErrorResponse) => {
