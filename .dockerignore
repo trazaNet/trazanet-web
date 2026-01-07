@@ -4,3 +4,8 @@ dist
 .gitignore
 .dockerignore
 README.md
+docs/
+scripts/
+*.md
+.vscode/
+.angular/
