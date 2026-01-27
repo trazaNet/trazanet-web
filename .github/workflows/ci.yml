@@ -30,6 +30,11 @@ jobs:
         cd trazanet-web-new
         npm run lint --if-present
 
+    - name: Run Tests
+      run: |
+        cd trazanet-web-new
+        npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
+
     - name: Build Angular
       run: |
         cd trazanet-web-new
